@@ -31,5 +31,5 @@ public class Stat {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    private Integer hits;
+    private Long hits;
 }
