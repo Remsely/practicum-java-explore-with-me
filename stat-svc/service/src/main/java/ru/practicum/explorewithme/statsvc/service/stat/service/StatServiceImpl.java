@@ -6,6 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.statsvc.common.dto.HitDto;
 import ru.practicum.explorewithme.statsvc.common.dto.StatDto;
 import ru.practicum.explorewithme.statsvc.common.dto.StatsRequest;
@@ -30,6 +31,7 @@ public class StatServiceImpl implements StatService {
     @PersistenceContext
     private EntityManager em;
 
+    @Transactional
     @Override
     public HitDto commitHit(HitDto hitDto) {
         Optional<Stat> statOptional = statRepository.findById(AppAndUriPrimaryKey.builder()
@@ -54,6 +56,7 @@ public class StatServiceImpl implements StatService {
         return savedHit;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<StatDto> getStats(StatsRequest request) {
         JPAQueryFactory queryFactory = new JPAQueryFactory(em);
