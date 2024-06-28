@@ -1,15 +1,42 @@
-version: '3.1'
+version: '3.8'
+
 services:
-  stats-server:
+  stat-service:
+    build: ./stat-svc/service
+    depends_on:
+      stat-db:
+        condition: service_healthy
+    environment:
+      - DB_NAME=ewm-stat
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - DB_HOST=stat-db
+      - DB_PORT=5432
     ports:
       - "9090:9090"
 
-  stats-db:
-    image: postgres:14-alpine
-
-  ewm-service:
+  stat-db:
+    image: postgres
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     ports:
-      - "8080:8080"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=ewm-stat
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
 
-  ewm-db:
-    image: postgres:14-alpine
+volumes:
+  postgres_data:
+
+#  main-service:
+#    ports:
+#      - "8080:8080"
+#
+#  main-db:
+#    image: postgres:14-alpine
