@@ -1,0 +1,59 @@
+package ru.practicum.explorewithme.mainsvc.user.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
+import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserRepositoryHelper;
+import ru.practicum.explorewithme.mainsvc.user.dto.UserDto;
+import ru.practicum.explorewithme.mainsvc.user.entity.User;
+import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
+import ru.practicum.explorewithme.mainsvc.user.repository.UserRepository;
+
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+    private final UserMapper userMapper;
+    private final UserRepositoryHelper userRepositoryHelper;
+    private final UserRepository userRepository;
+    private final PageableUtility pageableUtility;
+
+    @Override
+    public UserDto addUser(UserDto userDto) {
+        userRepositoryHelper.checkEmailUniqueness(userDto.getEmail());
+
+        User user = userMapper.toEntity(userDto);
+        User savedUser = userRepository.save(user);
+
+        UserDto dto = userMapper.toDto(savedUser);
+        log.info("User has been saved : {}", dto);
+        return dto;
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        userRepositoryHelper.checkExistenceById(userId);
+        userRepository.deleteById(userId);
+        log.info("User with id = {} has been deleted.", userId);
+    }
+
+    @Override
+    public List<UserDto> getUsers(PaginationRequest paginationRequest, List<Long> ids) {
+        Pageable pageable = pageableUtility.toPageable(paginationRequest);
+
+        List<User> users;
+        if (ids == null || ids.isEmpty()) {
+            users = userRepository.findAll(pageable).toList();
+        } else {
+            users = userRepository.findByIdIn(ids, pageable);
+        }
+        List<UserDto> dtos = userMapper.toDtoList(users);
+        log.info("Users have been found. List size : {}", dtos.size());
+        return dtos;
+    }
+}

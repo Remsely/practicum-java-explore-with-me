@@ -22,7 +22,7 @@ public class CategoryPublicController {
     @GetMapping("/{catId}")
     public CategoryDto getCategory(@PathVariable @Positive Long catId) {
         log.info("/categories/{} GET.", catId);
-        return categoryService.getCategory(catId);
+        return categoryService.getCategoryById(catId);
     }
 
     @GetMapping

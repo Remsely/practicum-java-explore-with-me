@@ -60,7 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryDto getCategory(Long catId) {
+    public CategoryDto getCategoryById(Long catId) {
         Category category = categoryRepositoryHelper.findById(catId);
         CategoryDto dto = categoryMapper.toDto(category);
         log.info("Category with id = {} has been found. Category : {}", catId, dto);

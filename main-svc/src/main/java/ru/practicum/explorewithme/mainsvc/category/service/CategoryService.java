@@ -12,7 +12,7 @@ public interface CategoryService {
 
     CategoryDto patchCategory(Long catId, CategoryDto categoryDto);
 
-    CategoryDto getCategory(Long catId);
+    CategoryDto getCategoryById(Long catId);
 
     List<CategoryDto> getCategories(PaginationRequest request);
 }
