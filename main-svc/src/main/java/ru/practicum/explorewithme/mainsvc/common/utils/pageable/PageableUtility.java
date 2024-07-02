@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.mainsvc.common.util.pageable;
+package ru.practicum.explorewithme.mainsvc.common.utils.pageable;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

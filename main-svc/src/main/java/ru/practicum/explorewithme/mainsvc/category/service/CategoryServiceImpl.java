@@ -9,8 +9,8 @@ import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.mapper.CategoryMapper;
 import ru.practicum.explorewithme.mainsvc.category.repository.CategoryRepository;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
-import ru.practicum.explorewithme.mainsvc.common.util.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.util.repositories.RepositoryHelper;
+import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryRepositoryHelper;
 
 import java.util.List;
 
@@ -19,12 +19,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
-    private final RepositoryHelper<Category> categoryRepositoryHelper;
+    private final CategoryRepositoryHelper categoryRepositoryHelper;
     private final CategoryRepository categoryRepository;
     private final PageableUtility pageableUtility;
 
     @Override
     public CategoryDto addCategory(CategoryDto categoryDto) {
+        categoryRepositoryHelper.checkNameUniqueness(categoryDto.getName());
+
         Category category = categoryMapper.toEntity(categoryDto);
         Category savedCategory = categoryRepository.save(category);
 
@@ -35,13 +37,15 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCategory(Long catId) {
-        categoryRepositoryHelper.checkExistence(catId);
+        categoryRepositoryHelper.checkExistenceById(catId);
         categoryRepository.deleteById(catId);
         log.info("Category with id = {} has been deleted.", catId);
     }
 
     @Override
     public CategoryDto patchCategory(Long catId, CategoryDto categoryDto) {
+        categoryRepositoryHelper.checkNameUniqueness(categoryDto.getName());
+
         Category category = categoryRepositoryHelper.findById(catId);
         category.setName(categoryDto.getName());
 
