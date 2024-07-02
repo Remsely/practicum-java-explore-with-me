@@ -44,10 +44,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto patchCategory(Long catId, CategoryDto categoryDto) {
-        categoryRepositoryHelper.checkNameUniqueness(categoryDto.getName());
-
         Category category = categoryRepositoryHelper.findById(catId);
-        category.setName(categoryDto.getName());
+
+        String name = categoryDto.getName();
+        if (!name.equals(category.getName())) {
+            categoryRepositoryHelper.checkNameUniqueness(name);
+            category.setName(name);
+        }
 
         Category savedCategory = categoryRepository.save(category);
         CategoryDto dto = categoryMapper.toDto(savedCategory);

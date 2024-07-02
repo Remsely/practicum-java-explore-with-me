@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.EwmBaseRuntimeException;
-import ru.practicum.explorewithme.mainsvc.exception.IllegalPageableArgumentsException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 
 @Slf4j
@@ -17,12 +16,6 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponseDto handleEntityNotFound(EntityNotFoundException e) {
-        return logMessageAndGetResponse(e);
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponseDto handleIllegalPageableArguments(IllegalPageableArgumentsException e) {
         return logMessageAndGetResponse(e);
     }
 

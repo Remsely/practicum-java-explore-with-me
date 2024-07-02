@@ -11,7 +11,7 @@ import javax.validation.constraints.PositiveOrZero;
 @Getter
 @Setter
 public class PaginationRequest {
-    @PositiveOrZero(message = "Индекс начала не может быть отрицательным.")
+    @PositiveOrZero(message = "From index must not be negative.")
     private Integer from;
 
     @Positive

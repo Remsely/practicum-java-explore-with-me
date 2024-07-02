@@ -11,11 +11,11 @@ import java.util.List;
 @Validated
 @Data
 public class StatsRequest {
-    @NotNull
+    @NotNull(message = "Start must not be null.")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime start;
 
-    @NotNull
+    @NotNull(message = "End must not be null.")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime end;
 
