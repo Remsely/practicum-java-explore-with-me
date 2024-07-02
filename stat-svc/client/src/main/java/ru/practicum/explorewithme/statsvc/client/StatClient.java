@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.explorewithme.statsvc.common.dto.HitDto;
 import ru.practicum.explorewithme.statsvc.common.dto.StatsRequest;
@@ -13,7 +13,7 @@ import ru.practicum.explorewithme.statsvc.common.dto.StatsRequest;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Service
 public class StatClient extends BaseClient {
     @Autowired
     public StatClient(@Value("${stat-svc.server.url}") String url, RestTemplateBuilder builder) {
