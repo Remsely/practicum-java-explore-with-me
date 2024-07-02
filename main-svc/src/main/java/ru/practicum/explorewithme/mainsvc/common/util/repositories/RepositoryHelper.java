@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.mainsvc.util.repositories;
+package ru.practicum.explorewithme.mainsvc.common.util.repositories;
 
 public interface RepositoryHelper<T> {
     T findById(Long id);

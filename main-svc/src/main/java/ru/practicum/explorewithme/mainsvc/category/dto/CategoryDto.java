@@ -10,6 +10,6 @@ import javax.validation.constraints.NotBlank;
 public class CategoryDto {
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "Название категории не должно быть пустым.")
     private String name;
 }

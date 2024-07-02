@@ -1,6 +1,9 @@
 package ru.practicum.explorewithme.mainsvc.category.service;
 
 import ru.practicum.explorewithme.mainsvc.category.dto.CategoryDto;
+import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
+
+import java.util.List;
 
 public interface CategoryService {
     CategoryDto addCategory(CategoryDto categoryDto);
@@ -8,4 +11,8 @@ public interface CategoryService {
     void deleteCategory(Long catId);
 
     CategoryDto patchCategory(Long catId, CategoryDto categoryDto);
+
+    CategoryDto getCategory(Long catId);
+
+    List<CategoryDto> getCategories(PaginationRequest request);
 }
