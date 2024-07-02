@@ -1,3 +1,36 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: main-svc
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        format_sql: true
+    open-in-view: false
+  sql:
+    init:
+      mode: always
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: ci,test
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:ewm-main
+    username: test
+    password: test
