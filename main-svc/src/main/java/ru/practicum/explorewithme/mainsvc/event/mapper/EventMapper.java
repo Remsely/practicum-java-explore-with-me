@@ -6,6 +6,7 @@ import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.mapper.CategoryMapper;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.EventUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
 
@@ -50,6 +51,22 @@ public class EventMapper {
                 .state(event.getState())
                 .title(event.getTitle())
                 .views(views)
+                .build();
+    }
+
+    public Event toEntity(EventUpdateDto dto) {
+        return Event.builder()
+                .annotation(dto.getAnnotation())
+                .category(Category.builder()
+                        .id(dto.getCategory())
+                        .build())
+                .description(dto.getDescription())
+                .eventDate(dto.getEventDate())
+                .location(locationMapper.toEntity(dto.getLocation()))
+                .paid(dto.getPaid())
+                .participantLimit(dto.getParticipantLimit())
+                .requestModeration(dto.getRequestModeration())
+                .title(dto.getTitle())
                 .build();
     }
 }

@@ -14,7 +14,7 @@ public class LocationMapper {
     }
 
     public Location toEntity(LocationDto locationDto) {
-        return Location.builder()
+        return locationDto == null ? null : Location.builder()
                 .lat(locationDto.getLat())
                 .lon(locationDto.getLon())
                 .build();

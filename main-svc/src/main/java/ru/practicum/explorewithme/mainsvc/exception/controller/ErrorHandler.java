@@ -5,10 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
-import ru.practicum.explorewithme.mainsvc.exception.DateValidationException;
-import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
-import ru.practicum.explorewithme.mainsvc.exception.EwmBaseRuntimeException;
+import ru.practicum.explorewithme.mainsvc.exception.*;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 
 @Slf4j
@@ -29,6 +26,12 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponseDto handleDateValidationException(DateValidationException e) {
+        return logMessageAndGetResponse(e);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponseDto handleEwmBaseRuntimeException(AccessRightsException e) {
         return logMessageAndGetResponse(e);
     }
 

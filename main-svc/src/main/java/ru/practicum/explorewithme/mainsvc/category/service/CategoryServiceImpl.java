@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.dto.CategoryDto;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.mapper.CategoryMapper;
@@ -23,6 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final PageableUtility pageableUtility;
 
+    @Transactional
     @Override
     public CategoryDto addCategory(CategoryDto categoryDto) {
         categoryRepositoryHelper.checkNameUniqueness(categoryDto.getName());
@@ -35,6 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
         return dto;
     }
 
+    @Transactional
     @Override
     public void deleteCategory(Long catId) {
         categoryRepositoryHelper.checkExistenceById(catId);
@@ -42,6 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Category with id = {} has been deleted.", catId);
     }
 
+    @Transactional
     @Override
     public CategoryDto patchCategory(Long catId, CategoryDto categoryDto) {
         Category category = categoryRepositoryHelper.findById(catId);
@@ -59,6 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public CategoryDto getCategoryById(Long catId) {
         Category category = categoryRepositoryHelper.findById(catId);
@@ -67,6 +72,7 @@ public class CategoryServiceImpl implements CategoryService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<CategoryDto> getCategories(PaginationRequest request) {
         Pageable pageable = pageableUtility.toPageable(request);

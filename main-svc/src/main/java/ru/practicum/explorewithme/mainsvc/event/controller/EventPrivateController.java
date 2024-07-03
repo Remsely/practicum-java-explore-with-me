@@ -9,7 +9,7 @@ import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventShortDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventUpdateUserRequest;
+import ru.practicum.explorewithme.mainsvc.event.dto.EventUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.service.EventService;
 
 import javax.validation.Valid;
@@ -32,9 +32,10 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
-    public EventDto patchEvent(@RequestBody @Valid EventUpdateUserRequest eventDto,
+    public EventDto patchEvent(@RequestBody @Valid EventUpdateDto eventDto,
                                @PathVariable long userId, @PathVariable long eventId) {
         log.info("PATCH /users/{}/events/{}. Body : {}", userId, eventId, eventDto);
+        eventValidator.validateEventUpdateDto(eventDto);
         return eventService.updateEvent(eventId, eventDto, userId);
     }
 

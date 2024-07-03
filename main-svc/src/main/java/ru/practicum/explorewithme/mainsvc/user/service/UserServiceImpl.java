@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
 import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserRepositoryHelper;
@@ -23,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PageableUtility pageableUtility;
 
+    @Transactional
     @Override
     public UserDto addUser(UserDto userDto) {
         userRepositoryHelper.checkEmailUniqueness(userDto.getEmail());
@@ -35,6 +37,7 @@ public class UserServiceImpl implements UserService {
         return dto;
     }
 
+    @Transactional
     @Override
     public void deleteUser(Long userId) {
         userRepositoryHelper.checkExistenceById(userId);
@@ -42,6 +45,7 @@ public class UserServiceImpl implements UserService {
         log.info("User with id = {} has been deleted.", userId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<UserDto> getUsers(PaginationRequest paginationRequest, List<Long> ids) {
         Pageable pageable = pageableUtility.toPageable(paginationRequest);
