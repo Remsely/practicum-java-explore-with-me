@@ -57,12 +57,27 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     @Override
     public RequestDto cancelRequest(long requestId, long userId) {
-        return null;
+        User user = userExceptionThrower.findById(userId);
+        Request request = requestExceptionThrower.findById(requestId);
+
+        requestExceptionThrower.checkUserIsRequester(user, request);
+        requestExceptionThrower.checkStatusIsPending(request);
+
+        request.setStatus(RequestStatus.CANCELED);
+        Request savedRequest = requestRepository.save(request);
+
+        RequestDto dto = requestMapper.toDto(savedRequest);
+        log.info("Request has been canceled : {}", dto);
+        return dto;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<RequestDto> getRequestsByUserId(long userId) {
-        return List.of();
+        User user = userExceptionThrower.findById(userId);
+        List<Request> requests = requestRepository.findByRequester(user);
+        List<RequestDto> dtos = requestMapper.toDtoList(requests);
+        log.info("Requests has been found. List size : {}", dtos);
+        return dtos;
     }
 }

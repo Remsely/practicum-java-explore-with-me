@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.mainsvc.request.dto.RequestDto;
 import ru.practicum.explorewithme.mainsvc.request.service.RequestService;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/users/{userId}/requests")
@@ -25,5 +27,11 @@ public class RequestPrivateController {
     public RequestDto cancelRequest(@PathVariable Long requestId, @PathVariable long userId) {
         log.info("/users/{}/requests/{} PATCH", userId, requestId);
         return requestService.cancelRequest(requestId, userId);
+    }
+
+    @GetMapping
+    public List<RequestDto> getRequests(@PathVariable long userId) {
+        log.info("/users/{}/requests GET", userId);
+        return requestService.getRequestsByUserId(userId);
     }
 }

@@ -27,4 +27,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @EntityGraph(attributePaths = {"event", "requester"})
     List<Request> findByEvent(Event event);
+
+    @EntityGraph(attributePaths = {"event", "requester"})
+    List<Request> findByRequester(User user);
 }

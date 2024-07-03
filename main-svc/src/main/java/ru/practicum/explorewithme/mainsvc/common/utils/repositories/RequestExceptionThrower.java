@@ -46,6 +46,20 @@ public class RequestExceptionThrower implements ByIdExceptionThrower<Request, Lo
         }
     }
 
+    public void checkUserIsRequester(User user, Request request) {
+        if (!request.getRequester().getId().equals(user.getId())) {
+            throw new AccessRightsException(
+                    ErrorResponseDto.builder()
+                            .status(HttpStatus.CONFLICT.toString())
+                            .reason("User is not the request initiator.")
+                            .message("User with id = " + user.getId() + " is not the request with id = "
+                                    + request.getId() + " initiator.")
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
+        }
+    }
+
     public void checkExistenceByUserAndEvent(User user, Event event) {
         if (requestRepository.existsByRequesterAndEvent(user, event)) {
             throw new AlreadyExistsException(
