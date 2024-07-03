@@ -51,8 +51,8 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}/requests")
-    public RequestStatusUpdateResult patchEventRequest(@RequestBody @Valid RequestStatusUpdateRequest request,
-                                                       @PathVariable long userId, @PathVariable long eventId) {
+    public RequestStatusUpdateResultDto patchEventRequest(@RequestBody @Valid RequestStatusUpdateRequestDto request,
+                                                          @PathVariable long userId, @PathVariable long eventId) {
         log.info("PATCH /users/{}/events/{}/requests. Body : {}", userId, eventId, request);
         eventValidator.validateEventRequestStatusUpdateRequest(request);
         return eventService.updateEventRequestsByUser(eventId, request, userId);

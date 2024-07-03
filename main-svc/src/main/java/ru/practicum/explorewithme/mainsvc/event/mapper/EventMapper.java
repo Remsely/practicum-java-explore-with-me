@@ -76,16 +76,32 @@ public class EventMapper {
     public List<EventShortDto> toShortDtoList(List<Event> events,
                                               List<Request> requests,
                                               Map<Long, Long> viewsByEventId) {
-        Map<Long, Integer> confirmedRequestsByEventsIds = requests.stream()
-                .collect(Collectors.groupingBy(
-                        request -> request.getEvent().getId(),
-                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
-                ));
+        Map<Long, Integer> confirmedRequestsByEventsIds = getConfirmedRequestsByEventsIds(requests);
         return events.stream()
                 .map(e -> toShortDto(
                         e,
                         confirmedRequestsByEventsIds.getOrDefault(e.getId(), 0),
                         viewsByEventId.getOrDefault(e.getId(), 0L)
                 )).collect(Collectors.toList());
+    }
+
+    public List<EventDto> toDtoList(List<Event> events,
+                                    List<Request> requests,
+                                    Map<Long, Long> viewsByEventId) {
+        Map<Long, Integer> confirmedRequestsByEventsIds = getConfirmedRequestsByEventsIds(requests);
+        return events.stream()
+                .map(e -> toDto(
+                        e,
+                        confirmedRequestsByEventsIds.getOrDefault(e.getId(), 0),
+                        viewsByEventId.getOrDefault(e.getId(), 0L)
+                )).collect(Collectors.toList());
+    }
+
+    private Map<Long, Integer> getConfirmedRequestsByEventsIds(List<Request> requests) {
+        return requests.stream()
+                .collect(Collectors.groupingBy(
+                        request -> request.getEvent().getId(),
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
     }
 }

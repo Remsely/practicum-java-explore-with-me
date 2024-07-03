@@ -11,7 +11,7 @@ import ru.practicum.explorewithme.mainsvc.category.mapper.CategoryMapper;
 import ru.practicum.explorewithme.mainsvc.category.repository.CategoryRepository;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.CategoryExceptionThrower;
 
 import java.util.List;
 

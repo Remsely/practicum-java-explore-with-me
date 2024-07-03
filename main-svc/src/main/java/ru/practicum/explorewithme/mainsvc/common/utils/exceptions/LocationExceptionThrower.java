@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.mainsvc.common.utils.repositories;
+package ru.practicum.explorewithme.mainsvc.common.utils.exceptions;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

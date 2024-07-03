@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventAdminUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventUserUpdateDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.RequestStatusUpdateRequest;
-import ru.practicum.explorewithme.mainsvc.exception.DateValidationException;
+import ru.practicum.explorewithme.mainsvc.event.dto.RequestStatusUpdateRequestDto;
+import ru.practicum.explorewithme.mainsvc.exception.DateTimeValidationException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
 
@@ -31,13 +31,13 @@ public class EventValidator {
         checkDateAfterPlusHours(dto.getEventDate(), 1, true);
     }
 
-    public void validateEventRequestStatusUpdateRequest(RequestStatusUpdateRequest request) {
+    public void validateEventRequestStatusUpdateRequest(RequestStatusUpdateRequestDto request) {
         checkStatusIn(request.getStatus(), List.of(RequestStatus.CONFIRMED, RequestStatus.REJECTED));
     }
 
     private void checkStatusIn(RequestStatus status, List<RequestStatus> statuses) {
         if (!statuses.contains(status)) {
-            throw new DateValidationException(
+            throw new DateTimeValidationException(
                     ErrorResponseDto.builder()
                             .status(HttpStatus.BAD_REQUEST.toString())
                             .reason("Incorrectly made request.")
@@ -52,7 +52,7 @@ public class EventValidator {
             return;
         }
         if (eventDate == null) {
-            throw new DateValidationException(
+            throw new DateTimeValidationException(
                     ErrorResponseDto.builder()
                             .status(HttpStatus.BAD_REQUEST.toString())
                             .reason("Incorrectly made request.")
@@ -61,7 +61,7 @@ public class EventValidator {
             );
         }
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(hours))) {
-            throw new DateValidationException(
+            throw new DateTimeValidationException(
                     ErrorResponseDto.builder()
                             .status(HttpStatus.BAD_REQUEST.toString())
                             .reason("Incorrectly made request.")

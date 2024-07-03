@@ -1,20 +1,23 @@
 package ru.practicum.explorewithme.mainsvc.event.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
+import ru.practicum.explorewithme.mainsvc.category.entity.QCategory;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
+import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
+import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.CategoryExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.RequestExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.UserExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryExceptionThrower;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.EventExceptionThrower;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.RequestExceptionThrower;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.event.dto.*;
-import ru.practicum.explorewithme.mainsvc.event.entity.Event;
-import ru.practicum.explorewithme.mainsvc.event.entity.EventState;
-import ru.practicum.explorewithme.mainsvc.event.entity.Location;
+import ru.practicum.explorewithme.mainsvc.event.entity.*;
+import ru.practicum.explorewithme.mainsvc.event.entity.QEvent;
+import ru.practicum.explorewithme.mainsvc.event.entity.QLocation;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
@@ -23,8 +26,11 @@ import ru.practicum.explorewithme.mainsvc.request.entity.Request;
 import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
 import ru.practicum.explorewithme.mainsvc.request.mapper.RequestMapper;
 import ru.practicum.explorewithme.mainsvc.request.repository.RequestRepository;
+import ru.practicum.explorewithme.mainsvc.user.entity.QUser;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +50,9 @@ public class EventServiceImpl implements EventService {
     private final RequestExceptionThrower requestExceptionThrower;
     private final RequestMapper requestMapper;
     private final PageableUtility pageableUtility;
+
+    @PersistenceContext
+    private EntityManager em;
 
     @Transactional
     @Override
@@ -123,6 +132,60 @@ public class EventServiceImpl implements EventService {
 
     @Transactional(readOnly = true)
     @Override
+    public List<EventDto> getEventsByAdmin(PaginationRequest paginationRequest,
+                                           TimeRangeRequest timeRangeRequest,
+                                           EventsAdminRequests eventsAdminRequests) {
+        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+
+        QEvent event = QEvent.event;
+        QCategory category = QCategory.category;
+        QUser user = QUser.user;
+        QLocation location = QLocation.location;
+
+        var query = queryFactory.selectFrom(event)
+                .leftJoin(event.category, category).fetchJoin()
+                .leftJoin(event.initiator, user).fetchJoin()
+                .leftJoin(event.location, location).fetchJoin();
+
+        List<Long> userIds = eventsAdminRequests.getUsers();
+        if (userIds != null && !userIds.isEmpty()) {
+            query.where(event.initiator.id.in(userIds));
+        }
+
+        List<EventState> states = eventsAdminRequests.getStates();
+        if (states != null && !states.isEmpty()) {
+            query.where(event.state.in(states));
+        }
+
+        List<Long> categoriesIds = eventsAdminRequests.getCategories();
+        if (categoriesIds != null && !categoriesIds.isEmpty()) {
+            query.where(event.category.id.in(categoriesIds));
+        }
+
+        LocalDateTime rangeStart = timeRangeRequest.getRangeStart();
+        if (rangeStart != null) {
+            query.where(event.eventDate.goe(rangeStart));
+        }
+
+        LocalDateTime rangeEnd = timeRangeRequest.getRangeEnd();
+        if (rangeEnd != null) {
+            query.where(event.eventDate.loe(rangeEnd));
+        }
+
+        Integer from = paginationRequest.getFrom();
+        Integer size = paginationRequest.getSize();
+        query.offset(from == null ? 0 : from).limit(size == null ? 10 : size);
+
+        List<Event> events = query.fetch();
+        List<Request> confirmedRequests = requestRepository.findByEventInAndStatus(events, RequestStatus.CONFIRMED);
+
+        List<EventDto> dtos = eventMapper.toDtoList(events, confirmedRequests, Map.of());
+        log.info("Events have been found. List size : {}", dtos);
+        return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public List<RequestDto> getEventRequestsByUser(long eventId, long userId) {
         User user = userExceptionThrower.findById(userId);
         Event event = eventExceptionThrower.findById(eventId);
@@ -137,8 +200,8 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public RequestStatusUpdateResult updateEventRequestsByUser(
-            long eventId, RequestStatusUpdateRequest request, long userId) {
+    public RequestStatusUpdateResultDto updateEventRequestsByUser(
+            long eventId, RequestStatusUpdateRequestDto request, long userId) {
         User user = userExceptionThrower.findById(userId);
         Event event = eventExceptionThrower.findById(eventId);
 
@@ -155,7 +218,7 @@ public class EventServiceImpl implements EventService {
         List<Request> confirmedRequests = requestRepository.findByEventAndStatus(event, RequestStatus.CONFIRMED);
         List<Request> rejectedRequests = requestRepository.findByEventAndStatus(event, RequestStatus.REJECTED);
 
-        RequestStatusUpdateResult result = RequestStatusUpdateResult.builder()
+        RequestStatusUpdateResultDto result = RequestStatusUpdateResultDto.builder()
                 .confirmedRequests(requestMapper.toDtoList(confirmedRequests))
                 .rejectedRequests(requestMapper.toDtoList(rejectedRequests))
                 .build();

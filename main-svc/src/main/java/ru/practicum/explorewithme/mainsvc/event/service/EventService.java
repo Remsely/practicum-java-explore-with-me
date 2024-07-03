@@ -1,6 +1,7 @@
 package ru.practicum.explorewithme.mainsvc.event.service;
 
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
+import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.event.dto.*;
 import ru.practicum.explorewithme.mainsvc.request.dto.RequestDto;
 
@@ -17,7 +18,11 @@ public interface EventService {
 
     List<EventShortDto> getEventsByUser(long userId, PaginationRequest paginationRequest);
 
+    List<EventDto> getEventsByAdmin(PaginationRequest paginationRequest,
+                                    TimeRangeRequest timeRangeRequest,
+                                    EventsAdminRequests eventsAdminRequests);
+
     List<RequestDto> getEventRequestsByUser(long eventId, long userId);
 
-    RequestStatusUpdateResult updateEventRequestsByUser(long eventId, RequestStatusUpdateRequest request, long userId);
+    RequestStatusUpdateResultDto updateEventRequestsByUser(long eventId, RequestStatusUpdateRequestDto request, long userId);
 }

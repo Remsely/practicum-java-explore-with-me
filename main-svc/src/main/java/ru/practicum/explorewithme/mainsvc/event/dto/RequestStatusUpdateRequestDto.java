@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class RequestStatusUpdateRequest {
+public class RequestStatusUpdateRequestDto {
     @Size(min = 1)
     private List<Long> requestIds;
 

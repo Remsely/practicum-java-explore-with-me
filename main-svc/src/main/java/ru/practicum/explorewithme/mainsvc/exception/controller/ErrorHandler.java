@@ -25,7 +25,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponseDto handleDateValidationException(DateValidationException e) {
+    public ErrorResponseDto handleDateValidationException(DateTimeValidationException e) {
         return logMessageAndGetResponse(e);
     }
 
