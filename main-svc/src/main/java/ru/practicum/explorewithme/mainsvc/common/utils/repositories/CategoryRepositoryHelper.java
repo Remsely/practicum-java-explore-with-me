@@ -2,6 +2,7 @@ package ru.practicum.explorewithme.mainsvc.common.utils.repositories;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.repository.CategoryRepository;
@@ -14,14 +15,14 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CategoryRepositoryHelper implements RepositoryByIdHelper<Category> {
+public class CategoryRepositoryHelper implements RepositoryByIdHelper<Category, Long> {
     private final CategoryRepository categoryRepository;
 
     @Override
     public Category findById(Long id) {
         return categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
                 ErrorResponseDto.builder()
-                        .status("NOT_FOUND")
+                        .status(HttpStatus.NOT_FOUND.toString())
                         .reason("Category not found.")
                         .message("Category with id = " + id + " not found.")
                         .timestamp(LocalDateTime.now())
@@ -34,7 +35,7 @@ public class CategoryRepositoryHelper implements RepositoryByIdHelper<Category> 
         if (!categoryRepository.existsById(id)) {
             throw new EntityNotFoundException(
                     ErrorResponseDto.builder()
-                            .status("NOT_FOUND")
+                            .status(HttpStatus.NOT_FOUND.toString())
                             .reason("Category not found.")
                             .message("Category with id = " + id + " not found.")
                             .timestamp(LocalDateTime.now())
@@ -47,7 +48,7 @@ public class CategoryRepositoryHelper implements RepositoryByIdHelper<Category> 
         if (categoryRepository.existsByName(name)) {
             throw new AlreadyExistsException(
                     ErrorResponseDto.builder()
-                            .status("CONFLICT")
+                            .status(HttpStatus.CONFLICT.toString())
                             .reason("Category name must be unique.")
                             .message("Category with name = " + name + " already exists.")
                             .timestamp(LocalDateTime.now())

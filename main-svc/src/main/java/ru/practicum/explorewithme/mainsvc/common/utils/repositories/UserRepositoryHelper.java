@@ -1,6 +1,7 @@
 package ru.practicum.explorewithme.mainsvc.common.utils.repositories;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
@@ -12,15 +13,15 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class UserRepositoryHelper implements RepositoryByIdHelper<User> {
+public class UserRepositoryHelper implements RepositoryByIdHelper<User, Long> {
     private final UserRepository userRepository;
 
     @Override
     public User findById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
                 ErrorResponseDto.builder()
-                        .status("NOT_FOUND")
-                        .reason("User not found")
+                        .status(HttpStatus.NOT_FOUND.toString())
+                        .reason("User not found.")
                         .message("User with id = " + id + " not found.")
                         .timestamp(LocalDateTime.now())
                         .build()
@@ -32,7 +33,7 @@ public class UserRepositoryHelper implements RepositoryByIdHelper<User> {
         if (!userRepository.existsById(id)) {
             throw new EntityNotFoundException(
                     ErrorResponseDto.builder()
-                            .status("NOT_FOUND")
+                            .status(HttpStatus.NOT_FOUND.toString())
                             .reason("User not found")
                             .message("User with id = " + id + " not found.")
                             .timestamp(LocalDateTime.now())
@@ -45,8 +46,8 @@ public class UserRepositoryHelper implements RepositoryByIdHelper<User> {
         if (userRepository.existsByEmail(email)) {
             throw new AlreadyExistsException(
                     ErrorResponseDto.builder()
-                            .status("CONFLICT")
-                            .reason("User email must be unique")
+                            .status(HttpStatus.CONFLICT.toString())
+                            .reason("User email must be unique.")
                             .message("User with email = " + email + " already exists.")
                             .timestamp(LocalDateTime.now())
                             .build()

@@ -27,7 +27,7 @@ public class CategoryPublicController {
 
     @GetMapping
     public List<CategoryDto> getCategories(@ModelAttribute @Validated PaginationRequest request) {
-        log.info("/categories GET.");
+        log.info("/categories?from={}&size={} GET.", request.getFrom(), request.getSize());
         return categoryService.getCategories(request);
     }
 }

@@ -36,7 +36,7 @@ public class UserController {
     @GetMapping
     public List<UserDto> getUsers(@ModelAttribute @Validated PaginationRequest request,
                                   @RequestParam(required = false) List<Long> ids) {
-        log.info("/admin/users GET.");
+        log.info("/admin/users?from={}&size={}&ids={} GET", request.getFrom(), request.getSize(), ids);
         return userService.getUsers(request, ids);
     }
 }

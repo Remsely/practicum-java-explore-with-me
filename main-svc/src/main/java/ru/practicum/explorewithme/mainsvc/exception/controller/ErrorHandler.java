@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
+import ru.practicum.explorewithme.mainsvc.exception.DateValidationException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.EwmBaseRuntimeException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
@@ -25,9 +26,15 @@ public class ErrorHandler {
         return logMessageAndGetResponse(e);
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseDto handleDateValidationException(DateValidationException e) {
+        return logMessageAndGetResponse(e);
+    }
+
     private ErrorResponseDto logMessageAndGetResponse(EwmBaseRuntimeException e) {
-        ErrorResponseDto errorResponseDto = e.getResponse();
-        log.warn(errorResponseDto.getMessage());
-        return errorResponseDto;
+        ErrorResponseDto response = e.getResponse();
+        log.warn("{} : {}", response.getStatus(), response.getMessage());
+        return response;
     }
 }
