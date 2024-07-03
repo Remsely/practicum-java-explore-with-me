@@ -9,6 +9,7 @@ import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
 import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.common.utils.repositories.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.RequestExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.event.dto.*;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
@@ -17,8 +18,10 @@ import ru.practicum.explorewithme.mainsvc.event.entity.Location;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
+import ru.practicum.explorewithme.mainsvc.request.dto.RequestDto;
 import ru.practicum.explorewithme.mainsvc.request.entity.Request;
 import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
+import ru.practicum.explorewithme.mainsvc.request.mapper.RequestMapper;
 import ru.practicum.explorewithme.mainsvc.request.repository.RequestRepository;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
@@ -38,6 +41,8 @@ public class EventServiceImpl implements EventService {
     private final CategoryExceptionThrower categoryExceptionThrower;
     private final UserExceptionThrower userExceptionThrower;
     private final RequestRepository requestRepository;
+    private final RequestExceptionThrower requestExceptionThrower;
+    private final RequestMapper requestMapper;
     private final PageableUtility pageableUtility;
 
     @Transactional
@@ -51,6 +56,10 @@ public class EventServiceImpl implements EventService {
         event.setCategory(category);
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
+
+        if (event.getParticipantLimit() == 0) {
+            event.setRequestModeration(false);
+        }
 
         Location location = event.getLocation();
         event.setLocation(locationService.putLocation(location));
@@ -112,6 +121,49 @@ public class EventServiceImpl implements EventService {
         return dtos;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<RequestDto> getEventRequestsByUser(long eventId, long userId) {
+        User user = userExceptionThrower.findById(userId);
+        Event event = eventExceptionThrower.findById(eventId);
+
+        eventExceptionThrower.checkUserIsInitiator(user, event);
+
+        List<Request> requests = requestRepository.findByEvent(event);
+        List<RequestDto> dtos = requestMapper.toDtoList(requests);
+        log.info("Requests have been found. List size : {}", dtos.size());
+        return dtos;
+    }
+
+    @Transactional
+    @Override
+    public RequestStatusUpdateResult updateEventRequestsByUser(
+            long eventId, RequestStatusUpdateRequest request, long userId) {
+        User user = userExceptionThrower.findById(userId);
+        Event event = eventExceptionThrower.findById(eventId);
+
+        eventExceptionThrower.checkUserIsInitiator(user, event);
+
+        List<Request> requestsToUpdate = requestRepository.findByEventAndIdIn(event, request.getRequestIds());
+        requestsToUpdate.forEach(r -> {
+            requestExceptionThrower.checkStatusIsPending(r);
+            eventExceptionThrower.checkParticipantLimit(event);
+            r.setStatus(request.getStatus());
+        });
+        requestRepository.saveAll(requestsToUpdate);
+
+        List<Request> confirmedRequests = requestRepository.findByEventAndStatus(event, RequestStatus.CONFIRMED);
+        List<Request> rejectedRequests = requestRepository.findByEventAndStatus(event, RequestStatus.REJECTED);
+
+        RequestStatusUpdateResult result = RequestStatusUpdateResult.builder()
+                .confirmedRequests(requestMapper.toDtoList(confirmedRequests))
+                .rejectedRequests(requestMapper.toDtoList(rejectedRequests))
+                .build();
+        log.info("Requests statuses has been updated. Confirmed requests size: {}, rejected requests size: {}",
+                result.getConfirmedRequests().size(), result.getRejectedRequests().size());
+        return result;
+    }
+
     private EventDto updateEventInDB(Event event) {
         Event savedEvent = eventRepository.save(event);
         EventDto savedEventDto = eventMapper.toDto(savedEvent, 0, 0);
@@ -136,13 +188,16 @@ public class EventServiceImpl implements EventService {
         if (paid != null) {
             updating.setPaid(paid);
         }
-        Integer participantLimit = updater.getParticipantLimit();
-        if (participantLimit != null) {
-            updating.setParticipantLimit(participantLimit);
-        }
         Boolean requestModeration = updater.getRequestModeration();
         if (requestModeration != null) {
             updating.setRequestModeration(requestModeration);
+        }
+        Integer participantLimit = updater.getParticipantLimit();
+        if (participantLimit != null) {
+            updating.setParticipantLimit(participantLimit);
+            if (participantLimit == 0) {
+                updating.setRequestModeration(false);
+            }
         }
         String title = updater.getTitle();
         if (title != null) {

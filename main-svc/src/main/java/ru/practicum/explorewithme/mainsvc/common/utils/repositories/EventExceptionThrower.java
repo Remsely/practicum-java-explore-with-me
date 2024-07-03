@@ -51,7 +51,7 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
     public void checkUserIsInitiator(User user, Event event) {
         if (!user.getId().equals(event.getInitiator().getId())) {
             throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
+                    .status(HttpStatus.CONFLICT.toString())
                     .reason("Access rights error.")
                     .message("User " + user.getId() + " is not an initiator of event " + event.getId() + ".")
                     .timestamp(LocalDateTime.now())
@@ -63,7 +63,7 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
     public void checkStatusIsPending(Event event) {
         if (event.getState() != EventState.PENDING) {
             throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
+                    .status(HttpStatus.CONFLICT.toString())
                     .reason("Incorrect event status.")
                     .message("Event " + event.getId() + " is not in " + EventState.PENDING + " state.")
                     .timestamp(LocalDateTime.now())
@@ -75,7 +75,7 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
     public void checkStatusIsPublished(Event event) {
         if (event.getState() != EventState.PUBLISHED) {
             throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
+                    .status(HttpStatus.CONFLICT.toString())
                     .reason("Incorrect event status.")
                     .message("Event " + event.getId() + " is not in " + EventState.PUBLISHED + " state.")
                     .timestamp(LocalDateTime.now())
@@ -87,7 +87,7 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
     public void checkStatusIsNotPublished(Event event) {
         if (event.getState() == EventState.PUBLISHED) {
             throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
+                    .status(HttpStatus.CONFLICT.toString())
                     .reason("Incorrect event status.")
                     .message("Event " + event.getId() + " is in " + EventState.PUBLISHED + " state.")
                     .timestamp(LocalDateTime.now())
@@ -99,7 +99,7 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
     public void checkStatusIsCanceledOrPending(Event event) {
         if (event.getState() != EventState.CANCELED && event.getState() != EventState.PENDING) {
             throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
+                    .status(HttpStatus.CONFLICT.toString())
                     .reason("Incorrect event status.")
                     .message("Event " + event.getId() + " is not in "
                             + EventState.CANCELED + " or " + EventState.PENDING + " state.")
@@ -112,7 +112,7 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
     public void checkUserIsNotInitiator(User user, Event event) {
         if (user.getId().equals(event.getInitiator().getId())) {
             throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
+                    .status(HttpStatus.CONFLICT.toString())
                     .reason("Access rights error.")
                     .message("User with id = " + user.getId() + " is an initiator of the event with id = "
                             + event.getId() + ".")

@@ -6,11 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventShortDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventUserUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.*;
 import ru.practicum.explorewithme.mainsvc.event.service.EventService;
+import ru.practicum.explorewithme.mainsvc.request.dto.RequestDto;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -50,5 +48,19 @@ public class EventPrivateController {
                                                @ModelAttribute @Validated PaginationRequest request) {
         log.info("GET /users/{}/events?from={}&size={}", userId, request.getFrom(), request.getSize());
         return eventService.getEventsByUser(userId, request);
+    }
+
+    @PatchMapping("/{eventId}/requests")
+    public RequestStatusUpdateResult patchEventRequest(@RequestBody @Valid RequestStatusUpdateRequest request,
+                                                       @PathVariable long userId, @PathVariable long eventId) {
+        log.info("PATCH /users/{}/events/{}/requests. Body : {}", userId, eventId, request);
+        eventValidator.validateEventRequestStatusUpdateRequest(request);
+        return eventService.updateEventRequestsByUser(eventId, request, userId);
+    }
+
+    @GetMapping("/{eventId}/requests")
+    public List<RequestDto> getEventRequests(@PathVariable long userId, @PathVariable long eventId) {
+        log.info("GET /users/{}/events/{}/requests", userId, eventId);
+        return eventService.getEventRequestsByUser(eventId, userId);
     }
 }

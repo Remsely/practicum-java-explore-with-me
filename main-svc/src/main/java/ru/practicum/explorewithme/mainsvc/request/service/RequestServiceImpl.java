@@ -44,7 +44,7 @@ public class RequestServiceImpl implements RequestService {
                 .requester(user)
                 .created(LocalDateTime.now())
                 .status(event.getRequestModeration().equals(Boolean.TRUE)
-                        ? /* event.getParticipantLimit() == 0 ? RequestStatus.CONFIRMED : */ RequestStatus.PENDING
+                        ? RequestStatus.PENDING
                         : RequestStatus.CONFIRMED)
                 .build();
         Request savedRequest = requestRepository.save(request);

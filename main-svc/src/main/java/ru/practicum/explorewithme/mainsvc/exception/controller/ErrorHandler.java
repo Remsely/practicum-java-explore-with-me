@@ -41,6 +41,12 @@ public class ErrorHandler {
         return logMessageAndGetResponse(e);
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseDto handleRequestsAlreadyCompleted(IllegalStatusException e) {
+        return logMessageAndGetResponse(e);
+    }
+
     private ErrorResponseDto logMessageAndGetResponse(EwmBaseRuntimeException e) {
         ErrorResponseDto response = e.getResponse();
         log.warn("{} : {}", response.getStatus(), response.getMessage());

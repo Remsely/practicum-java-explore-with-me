@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
+import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 import ru.practicum.explorewithme.mainsvc.request.entity.Request;
+import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
 import ru.practicum.explorewithme.mainsvc.request.repository.RequestRepository;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
@@ -52,6 +54,20 @@ public class RequestExceptionThrower implements ByIdExceptionThrower<Request, Lo
                             .reason("Request already exists.")
                             .message("Request with user = " + user.getId()
                                     + " and event = " + event.getId() + " already exists.")
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
+        }
+    }
+
+    public void checkStatusIsPending(Request request) {
+        if (!request.getStatus().equals(RequestStatus.PENDING)) {
+            throw new AccessRightsException(
+                    ErrorResponseDto.builder()
+                            .status(HttpStatus.CONFLICT.toString())
+                            .reason("Incorrect event request status.")
+                            .message("Request with id = " + request.getId() + " status is not " + RequestStatus.PENDING
+                                    + ". Current status : " + request.getStatus() + ".")
                             .timestamp(LocalDateTime.now())
                             .build()
             );

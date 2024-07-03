@@ -6,10 +6,13 @@ import org.springframework.stereotype.Component;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventAdminUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventUserUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.RequestStatusUpdateRequest;
 import ru.practicum.explorewithme.mainsvc.exception.DateValidationException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
+import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class EventValidator {
@@ -26,6 +29,22 @@ public class EventValidator {
 
     public void validateEventAdminUpdateDto(EventAdminUpdateDto dto) {
         checkDateAfterPlusHours(dto.getEventDate(), 1, true);
+    }
+
+    public void validateEventRequestStatusUpdateRequest(RequestStatusUpdateRequest request) {
+        checkStatusIn(request.getStatus(), List.of(RequestStatus.CONFIRMED, RequestStatus.REJECTED));
+    }
+
+    private void checkStatusIn(RequestStatus status, List<RequestStatus> statuses) {
+        if (!statuses.contains(status)) {
+            throw new DateValidationException(
+                    ErrorResponseDto.builder()
+                            .status(HttpStatus.BAD_REQUEST.toString())
+                            .reason("Incorrectly made request.")
+                            .message("Field: status. Error: status must be one of: " + statuses)
+                            .build()
+            );
+        }
     }
 
     private void checkDateAfterPlusHours(LocalDateTime eventDate, int hours, boolean nullable) {

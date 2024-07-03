@@ -18,4 +18,13 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @EntityGraph(attributePaths = {"event", "requester"})
     List<Request> findByEventInAndStatus(List<Event> events, RequestStatus status);
+
+    @EntityGraph(attributePaths = {"event", "requester"})
+    List<Request> findByEventAndIdIn(Event event, List<Long> requestIds);
+
+    @EntityGraph(attributePaths = {"event", "requester"})
+    List<Request> findByEventAndStatus(Event event, RequestStatus status);
+
+    @EntityGraph(attributePaths = {"event", "requester"})
+    List<Request> findByEvent(Event event);
 }
