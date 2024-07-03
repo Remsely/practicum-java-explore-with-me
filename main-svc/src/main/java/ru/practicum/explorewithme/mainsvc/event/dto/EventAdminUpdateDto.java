@@ -4,32 +4,26 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
+import ru.practicum.explorewithme.mainsvc.event.dto.enums.AdminStateAction;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class EventCreationDto {
+public class EventAdminUpdateDto implements EventUpdateDto {
     @ToString.Exclude
-    @NotBlank(message = "Event annotation should not be blank.")
     @Length(min = 20, max = 2000, message = "Event annotation should be between 20 and 2000 characters.")
     private String annotation;
 
-    @NotNull(message = "Event category should not be undefined.")
     private Long category;
 
     @ToString.Exclude
-    @NotBlank(message = "Event description should not be blank.")
     @Length(min = 20, max = 7000, message = "Event description should be between 20 and 7000 characters.")
     private String description;
 
-    @NotNull(message = "Event event date should not be undefined.")
     private LocalDateTime eventDate;
 
-    @NotNull(message = "Event location should not be undefined.")
     private LocationDto location;
 
     private Boolean paid;
@@ -39,7 +33,8 @@ public class EventCreationDto {
 
     private Boolean requestModeration;
 
-    @NotBlank(message = "Event title should not be blank.")
+    private AdminStateAction stateAction;
+
     @Length(min = 3, max = 120, message = "Event title should be between 3 and 120 characters.")
     private String title;
 }

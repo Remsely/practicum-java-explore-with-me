@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventState;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
 import javax.persistence.*;

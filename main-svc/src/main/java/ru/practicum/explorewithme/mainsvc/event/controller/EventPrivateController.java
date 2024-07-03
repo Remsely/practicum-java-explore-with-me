@@ -9,7 +9,7 @@ import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventShortDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.EventUserUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.service.EventService;
 
 import javax.validation.Valid;
@@ -17,13 +17,13 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/users/{userId}/events")
 @RequiredArgsConstructor
 public class EventPrivateController {
     private final EventService eventService;
     private final EventValidator eventValidator;
 
-    @PostMapping("/{userId}/events")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventDto postEvent(@RequestBody @Valid EventCreationDto eventDto, @PathVariable long userId) {
         log.info("POST /users/{}/events. Body : {}", userId, eventDto);
@@ -31,21 +31,21 @@ public class EventPrivateController {
         return eventService.addEvent(eventDto, userId);
     }
 
-    @PatchMapping("/{userId}/events/{eventId}")
-    public EventDto patchEvent(@RequestBody @Valid EventUpdateDto eventDto,
+    @PatchMapping("/{eventId}")
+    public EventDto patchEvent(@RequestBody @Valid EventUserUpdateDto eventDto,
                                @PathVariable long userId, @PathVariable long eventId) {
         log.info("PATCH /users/{}/events/{}. Body : {}", userId, eventId, eventDto);
-        eventValidator.validateEventUpdateDto(eventDto);
-        return eventService.updateEvent(eventId, eventDto, userId);
+        eventValidator.validateEventUserUpdateDto(eventDto);
+        return eventService.updateEventByUser(eventId, eventDto, userId);
     }
 
-    @GetMapping("/{userId}/events/{eventId}")
+    @GetMapping("/{eventId}")
     public EventDto getEvent(@PathVariable long userId, @PathVariable long eventId) {
         log.info("GET /users/{}/events/{}", userId, eventId);
         return eventService.getEventById(eventId, userId);
     }
 
-    @GetMapping("/{userId}/events")
+    @GetMapping
     public List<EventShortDto> getEventsByUser(@PathVariable long userId,
                                                @ModelAttribute @Validated PaginationRequest request) {
         log.info("GET /users/{}/events?from={}&size={}", userId, request.getFrom(), request.getSize());

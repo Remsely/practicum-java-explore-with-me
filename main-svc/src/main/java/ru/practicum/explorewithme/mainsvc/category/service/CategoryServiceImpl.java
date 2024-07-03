@@ -11,7 +11,7 @@ import ru.practicum.explorewithme.mainsvc.category.mapper.CategoryMapper;
 import ru.practicum.explorewithme.mainsvc.category.repository.CategoryRepository;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryRepositoryHelper;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryExceptionThrower;
 
 import java.util.List;
 
@@ -20,14 +20,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
-    private final CategoryRepositoryHelper categoryRepositoryHelper;
+    private final CategoryExceptionThrower categoryExceptionThrower;
     private final CategoryRepository categoryRepository;
     private final PageableUtility pageableUtility;
 
     @Transactional
     @Override
     public CategoryDto addCategory(CategoryDto categoryDto) {
-        categoryRepositoryHelper.checkNameUniqueness(categoryDto.getName());
+        categoryExceptionThrower.checkNameUniqueness(categoryDto.getName());
 
         Category category = categoryMapper.toEntity(categoryDto);
         Category savedCategory = categoryRepository.save(category);
@@ -40,7 +40,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public void deleteCategory(Long catId) {
-        categoryRepositoryHelper.checkExistenceById(catId);
+        categoryExceptionThrower.checkExistenceById(catId);
         categoryRepository.deleteById(catId);
         log.info("Category with id = {} has been deleted.", catId);
     }
@@ -48,11 +48,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public CategoryDto patchCategory(Long catId, CategoryDto categoryDto) {
-        Category category = categoryRepositoryHelper.findById(catId);
+        Category category = categoryExceptionThrower.findById(catId);
 
         String name = categoryDto.getName();
         if (!name.equals(category.getName())) {
-            categoryRepositoryHelper.checkNameUniqueness(name);
+            categoryExceptionThrower.checkNameUniqueness(name);
             category.setName(name);
         }
 
@@ -66,7 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     @Override
     public CategoryDto getCategoryById(Long catId) {
-        Category category = categoryRepositoryHelper.findById(catId);
+        Category category = categoryExceptionThrower.findById(catId);
         CategoryDto dto = categoryMapper.toDto(category);
         log.info("Category with id = {} has been found. Category : {}", catId, dto);
         return dto;

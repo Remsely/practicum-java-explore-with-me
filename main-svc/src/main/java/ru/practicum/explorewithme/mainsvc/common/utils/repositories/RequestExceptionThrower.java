@@ -1,30 +1,30 @@
 package ru.practicum.explorewithme.mainsvc.common.utils.repositories;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.practicum.explorewithme.mainsvc.category.entity.Category;
-import ru.practicum.explorewithme.mainsvc.category.repository.CategoryRepository;
+import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
+import ru.practicum.explorewithme.mainsvc.request.entity.Request;
+import ru.practicum.explorewithme.mainsvc.request.repository.RequestRepository;
+import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
 import java.time.LocalDateTime;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
-public class CategoryRepositoryHelper implements RepositoryByIdHelper<Category, Long> {
-    private final CategoryRepository categoryRepository;
+public class RequestExceptionThrower implements ByIdExceptionThrower<Request, Long> {
+    private final RequestRepository requestRepository;
 
     @Override
-    public Category findById(Long id) {
-        return categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
+    public Request findById(Long id) {
+        return requestRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
                 ErrorResponseDto.builder()
                         .status(HttpStatus.NOT_FOUND.toString())
-                        .reason("Category not found.")
-                        .message("Category with id = " + id + " not found.")
+                        .reason("Request not found")
+                        .message("Request with id = " + id + " not found")
                         .timestamp(LocalDateTime.now())
                         .build()
         ));
@@ -32,25 +32,26 @@ public class CategoryRepositoryHelper implements RepositoryByIdHelper<Category, 
 
     @Override
     public void checkExistenceById(Long id) {
-        if (!categoryRepository.existsById(id)) {
+        if (!requestRepository.existsById(id)) {
             throw new EntityNotFoundException(
                     ErrorResponseDto.builder()
                             .status(HttpStatus.NOT_FOUND.toString())
-                            .reason("Category not found.")
-                            .message("Category with id = " + id + " not found.")
+                            .reason("Request not found")
+                            .message("Request with id = " + id + " not found")
                             .timestamp(LocalDateTime.now())
                             .build()
             );
         }
     }
 
-    public void checkNameUniqueness(String name) {
-        if (categoryRepository.existsByName(name)) {
+    public void checkExistenceByUserAndEvent(User user, Event event) {
+        if (requestRepository.existsByRequesterAndEvent(user, event)) {
             throw new AlreadyExistsException(
                     ErrorResponseDto.builder()
                             .status(HttpStatus.CONFLICT.toString())
-                            .reason("Category name must be unique.")
-                            .message("Category with name = " + name + " already exists.")
+                            .reason("Request already exists.")
+                            .message("Request with user = " + user.getId()
+                                    + " and event = " + event.getId() + " already exists.")
                             .timestamp(LocalDateTime.now())
                             .build()
             );

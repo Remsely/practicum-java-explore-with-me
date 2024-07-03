@@ -6,9 +6,14 @@ import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.mapper.CategoryMapper;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.EventShortDto;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
+import ru.practicum.explorewithme.mainsvc.request.entity.Request;
 import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -54,19 +59,33 @@ public class EventMapper {
                 .build();
     }
 
-    public Event toEntity(EventUpdateDto dto) {
-        return Event.builder()
-                .annotation(dto.getAnnotation())
-                .category(Category.builder()
-                        .id(dto.getCategory())
-                        .build())
-                .description(dto.getDescription())
-                .eventDate(dto.getEventDate())
-                .location(locationMapper.toEntity(dto.getLocation()))
-                .paid(dto.getPaid())
-                .participantLimit(dto.getParticipantLimit())
-                .requestModeration(dto.getRequestModeration())
-                .title(dto.getTitle())
+    public EventShortDto toShortDto(Event event, int confirmedRequests, long views) {
+        return EventShortDto.builder()
+                .id(event.getId())
+                .annotation(event.getAnnotation())
+                .category(categoryMapper.toDto(event.getCategory()))
+                .confirmedRequests(confirmedRequests)
+                .eventDate(event.getEventDate())
+                .initiator(userMapper.toDto(event.getInitiator()))
+                .paid(event.getPaid())
+                .title(event.getTitle())
+                .views(views)
                 .build();
+    }
+
+    public List<EventShortDto> toShortDtoList(List<Event> events,
+                                              List<Request> requests,
+                                              Map<Long, Long> viewsByEventId) {
+        Map<Long, Integer> confirmedRequestsByEventsIds = requests.stream()
+                .collect(Collectors.groupingBy(
+                        request -> request.getEvent().getId(),
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
+        return events.stream()
+                .map(e -> toShortDto(
+                        e,
+                        confirmedRequestsByEventsIds.getOrDefault(e.getId(), 0),
+                        viewsByEventId.getOrDefault(e.getId(), 0L)
+                )).collect(Collectors.toList());
     }
 }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class UserRepositoryHelper implements RepositoryByIdHelper<User, Long> {
+public class UserExceptionThrower implements ByIdExceptionThrower<User, Long> {
     private final UserRepository userRepository;
 
     @Override

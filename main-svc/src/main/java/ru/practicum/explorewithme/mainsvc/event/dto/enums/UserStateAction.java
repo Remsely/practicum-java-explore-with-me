@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.mainsvc.event.dto;
+package ru.practicum.explorewithme.mainsvc.event.dto.enums;
 
 public enum UserStateAction {
     CANCEL_REVIEW,

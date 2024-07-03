@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import ru.practicum.explorewithme.mainsvc.category.dto.CategoryDto;
+import ru.practicum.explorewithme.mainsvc.event.entity.EventState;
 import ru.practicum.explorewithme.mainsvc.user.dto.UserDto;
 
 import java.time.LocalDateTime;

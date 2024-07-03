@@ -30,8 +30,14 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponseDto handleEwmBaseRuntimeException(AccessRightsException e) {
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponseDto handleAccessRights(AccessRightsException e) {
+        return logMessageAndGetResponse(e);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponseDto handleRequestsAlreadyCompleted(RequestsAlreadyCompletedException e) {
         return logMessageAndGetResponse(e);
     }
 

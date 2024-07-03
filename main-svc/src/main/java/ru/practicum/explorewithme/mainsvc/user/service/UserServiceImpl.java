@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserRepositoryHelper;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.user.dto.UserDto;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
@@ -20,14 +20,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
-    private final UserRepositoryHelper userRepositoryHelper;
+    private final UserExceptionThrower userExceptionThrower;
     private final UserRepository userRepository;
     private final PageableUtility pageableUtility;
 
     @Transactional
     @Override
     public UserDto addUser(UserDto userDto) {
-        userRepositoryHelper.checkEmailUniqueness(userDto.getEmail());
+        userExceptionThrower.checkEmailUniqueness(userDto.getEmail());
 
         User user = userMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void deleteUser(Long userId) {
-        userRepositoryHelper.checkExistenceById(userId);
+        userExceptionThrower.checkExistenceById(userId);
         userRepository.deleteById(userId);
         log.info("User with id = {} has been deleted.", userId);
     }

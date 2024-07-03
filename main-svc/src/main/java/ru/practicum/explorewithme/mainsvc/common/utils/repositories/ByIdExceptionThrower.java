@@ -1,6 +1,6 @@
 package ru.practicum.explorewithme.mainsvc.common.utils.repositories;
 
-public interface RepositoryByIdHelper<T, K> {
+public interface ByIdExceptionThrower<T, K> {
     T findById(K id);
 
     void checkExistenceById(K id);

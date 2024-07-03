@@ -2,27 +2,29 @@ package ru.practicum.explorewithme.mainsvc.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryRepositoryHelper;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.EventRepositoryHelper;
-import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserRepositoryHelper;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.CategoryExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.common.utils.repositories.UserExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.event.dto.*;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
+import ru.practicum.explorewithme.mainsvc.event.entity.EventState;
 import ru.practicum.explorewithme.mainsvc.event.entity.Location;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
-import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
-import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
+import ru.practicum.explorewithme.mainsvc.request.entity.Request;
+import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
+import ru.practicum.explorewithme.mainsvc.request.repository.RequestRepository;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -30,18 +32,19 @@ import java.util.List;
 public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
-    private final EventRepositoryHelper eventRepositoryHelper;
+    private final EventExceptionThrower eventExceptionThrower;
     private final LocationService locationService;
     private final LocationMapper locationMapper;
-    private final CategoryRepositoryHelper categoryRepositoryHelper;
-    private final UserRepositoryHelper userRepositoryHelper;
+    private final CategoryExceptionThrower categoryExceptionThrower;
+    private final UserExceptionThrower userExceptionThrower;
+    private final RequestRepository requestRepository;
     private final PageableUtility pageableUtility;
 
     @Transactional
     @Override
     public EventDto addEvent(EventCreationDto dto, long userId) {
-        User user = userRepositoryHelper.findById(userId);
-        Category category = categoryRepositoryHelper.findById(dto.getCategory());
+        User user = userExceptionThrower.findById(userId);
+        Category category = categoryExceptionThrower.findById(dto.getCategory());
         Event event = eventMapper.toEntity(dto);
 
         event.setInitiator(user);
@@ -60,54 +63,60 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public EventDto updateEvent(long eventId, EventUpdateDto dto, long userId) {
-        Event event = eventRepositoryHelper.findById(eventId);
-        User user = userRepositoryHelper.findById(userId);
+    public EventDto updateEventByUser(long eventId, EventUserUpdateDto dto, long userId) {
+        Event event = eventExceptionThrower.findById(eventId);
+        User user = userExceptionThrower.findById(userId);
 
-        checkInitiatorPermission(user, event);
-        checkEventStatus(event);
+        eventExceptionThrower.checkUserIsInitiator(user, event);
+        eventExceptionThrower.checkStatusIsCanceledOrPending(event);
 
         updateEventProperties(event, dto);
-        Event savedEvent = eventRepository.save(event);
+        updateEventStateByUser(event, dto);
 
+        return updateEventInDB(event);
+    }
+
+    @Transactional
+    @Override
+    public EventDto updateEventByAdmin(long eventId, EventAdminUpdateDto dto) {
+        Event event = eventExceptionThrower.findById(eventId);
+        updateEventStateByAdmin(event, dto);
+        updateEventProperties(event, dto);
+        return updateEventInDB(event);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EventDto getEventById(long eventId, long userId) {
+        User user = userExceptionThrower.findById(userId);
+        Event event = eventExceptionThrower.findById(eventId);
+
+        eventExceptionThrower.checkUserIsInitiator(user, event);
+
+        int confirmedRequests = requestRepository.countByEventAndStatus(event, RequestStatus.CONFIRMED);
+        EventDto eventDto = eventMapper.toDto(event, confirmedRequests, 0);
+        log.info("Event has been found : {}", eventDto);
+        return eventDto;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EventShortDto> getEventsByUser(long userId, PaginationRequest paginationRequest) {
+        userExceptionThrower.checkExistenceById(userId);
+
+        List<Event> events = eventRepository.findByInitiatorId(userId, pageableUtility.toPageable(paginationRequest));
+        List<Request> requests = requestRepository.findByEventInAndStatus(events, RequestStatus.CONFIRMED);
+
+        List<EventShortDto> dtos = eventMapper.toShortDtoList(events, requests, Map.of());
+        log.info("Events have been found : {}", dtos);
+        return dtos;
+    }
+
+    private EventDto updateEventInDB(Event event) {
+        Event savedEvent = eventRepository.save(event);
         EventDto savedEventDto = eventMapper.toDto(savedEvent, 0, 0);
         log.info("Event has been updated : {}", savedEventDto);
         return savedEventDto;
-    }
-
-    @Override
-    public EventDto getEventById(long eventId, long userId) {
-        return null;
-    }
-
-    @Override
-    public List<EventShortDto> getEventsByUser(long userId, PaginationRequest paginationRequest) {
-        return List.of();
-    }
-
-    private void checkInitiatorPermission(User user, Event event) {
-        if (!user.getId().equals(event.getInitiator().getId())) {
-            throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
-                    .reason("Access rights error.")
-                    .message("User " + user.getId() + " is not an initiator of event " + event.getId() + ".")
-                    .timestamp(LocalDateTime.now())
-                    .build()
-            );
-        }
-    }
-
-    private void checkEventStatus(Event event) {
-        if (event.getState() != EventState.CANCELED && event.getState() != EventState.PENDING) {
-            throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.FORBIDDEN.toString())
-                    .reason("Incorrect event status.")
-                    .message("Event " + event.getId() + " is not in "
-                            + EventState.CANCELED + " or " + EventState.PENDING + " state.")
-                    .timestamp(LocalDateTime.now())
-                    .build()
-            );
-        }
     }
 
     private void updateEventProperties(Event updating, EventUpdateDto updater) {
@@ -142,10 +151,9 @@ public class EventServiceImpl implements EventService {
 
         updateCategory(updating, updater);
         updateLocation(updating, updater);
-        updateEventState(updating, updater);
     }
 
-    private void updateEventState(Event updating, EventUpdateDto updater) {
+    private void updateEventStateByUser(Event updating, EventUserUpdateDto updater) {
         if (updater.getStateAction() == null) {
             return;
         }
@@ -159,10 +167,27 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    private void updateEventStateByAdmin(Event updating, EventAdminUpdateDto updater) {
+        if (updater.getStateAction() == null) {
+            return;
+        }
+        switch (updater.getStateAction()) {
+            case REJECT_EVENT:
+                eventExceptionThrower.checkStatusIsNotPublished(updating);
+                updating.setState(EventState.CANCELED);
+                break;
+            case PUBLISH_EVENT:
+                eventExceptionThrower.checkStatusIsPending(updating);
+                updating.setState(EventState.PUBLISHED);
+                updating.setPublishedOn(LocalDateTime.now());
+                break;
+        }
+    }
+
     private void updateCategory(Event updating, EventUpdateDto updater) {
         Long categoryId = updater.getCategory();
         if (categoryId != null && !categoryId.equals(updating.getCategory().getId())) {
-            Category category = categoryRepositoryHelper.findById(categoryId);
+            Category category = categoryExceptionThrower.findById(categoryId);
             updating.setCategory(category);
         }
     }

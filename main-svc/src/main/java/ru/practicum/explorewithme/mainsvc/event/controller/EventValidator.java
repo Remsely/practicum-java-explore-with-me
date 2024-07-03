@@ -3,8 +3,9 @@ package ru.practicum.explorewithme.mainsvc.event.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import ru.practicum.explorewithme.mainsvc.event.dto.EventAdminUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.EventUserUpdateDto;
 import ru.practicum.explorewithme.mainsvc.exception.DateValidationException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 
@@ -13,17 +14,21 @@ import java.time.LocalDateTime;
 @Component
 public class EventValidator {
     public void validateEventCreationDto(EventCreationDto eventCreationDto) {
-        validateEventDate(eventCreationDto.getEventDate(), false);
-        validateRequestModeration(eventCreationDto);
-        validateParticipantLimit(eventCreationDto);
-        validatePaid(eventCreationDto);
+        checkDateAfterPlusHours(eventCreationDto.getEventDate(), 2, false);
+        setDefaultRequestModeration(eventCreationDto);
+        setDefaultParticipantLimit(eventCreationDto);
+        setDefaultPaid(eventCreationDto);
     }
 
-    public void validateEventUpdateDto(EventUpdateDto dto) {
-        validateEventDate(dto.getEventDate(), true);
+    public void validateEventUserUpdateDto(EventUserUpdateDto dto) {
+        checkDateAfterPlusHours(dto.getEventDate(), 2, true);
     }
 
-    private void validateEventDate(LocalDateTime eventDate, boolean nullable) {
+    public void validateEventAdminUpdateDto(EventAdminUpdateDto dto) {
+        checkDateAfterPlusHours(dto.getEventDate(), 1, true);
+    }
+
+    private void checkDateAfterPlusHours(LocalDateTime eventDate, int hours, boolean nullable) {
         if (eventDate == null && nullable) {
             return;
         }
@@ -36,7 +41,7 @@ public class EventValidator {
                             .build()
             );
         }
-        if (!eventDate.isAfter(LocalDateTime.now().plusHours(2))) {
+        if (!eventDate.isAfter(LocalDateTime.now().plusHours(hours))) {
             throw new DateValidationException(
                     ErrorResponseDto.builder()
                             .status(HttpStatus.BAD_REQUEST.toString())
@@ -48,17 +53,17 @@ public class EventValidator {
         }
     }
 
-    private void validateRequestModeration(EventCreationDto eventCreationDto) {
+    private void setDefaultRequestModeration(EventCreationDto eventCreationDto) {
         Boolean requestModeration = eventCreationDto.getRequestModeration();
         eventCreationDto.setRequestModeration(requestModeration != null ? requestModeration : true);
     }
 
-    private void validateParticipantLimit(EventCreationDto eventCreationDto) {
+    private void setDefaultParticipantLimit(EventCreationDto eventCreationDto) {
         Integer participantLimit = eventCreationDto.getParticipantLimit();
         eventCreationDto.setParticipantLimit(participantLimit != null ? participantLimit : 0);
     }
 
-    private void validatePaid(EventCreationDto eventCreationDto) {
+    private void setDefaultPaid(EventCreationDto eventCreationDto) {
         Boolean paid = eventCreationDto.getPaid();
         eventCreationDto.setPaid(paid != null ? paid : false);
     }
