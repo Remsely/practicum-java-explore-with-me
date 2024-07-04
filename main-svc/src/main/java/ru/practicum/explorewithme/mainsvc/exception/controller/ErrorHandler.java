@@ -42,6 +42,12 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponseDto handleRequestsAlreadyCompleted(NotPublicException e) {
+        return logMessageAndGetResponse(e);
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponseDto handleRequestsAlreadyCompleted(IllegalStatusException e) {
         return logMessageAndGetResponse(e);

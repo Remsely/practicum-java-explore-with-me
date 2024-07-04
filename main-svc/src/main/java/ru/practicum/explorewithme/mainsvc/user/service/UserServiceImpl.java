@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
-import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.UserExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.user.dto.UserDto;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
 import ru.practicum.explorewithme.mainsvc.user.repository.UserRepository;
+import ru.practicum.explorewithme.mainsvc.user.util.UserExceptionThrower;
 
 import java.util.List;
 

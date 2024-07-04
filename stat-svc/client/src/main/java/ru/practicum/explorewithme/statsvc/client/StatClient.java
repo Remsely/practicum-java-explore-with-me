@@ -10,6 +10,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.explorewithme.statsvc.common.dto.HitDto;
 import ru.practicum.explorewithme.statsvc.common.dto.StatsRequest;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,16 +27,20 @@ public class StatClient extends BaseClient {
         return post("/hit", dto);
     }
 
-    public ResponseEntity<?> getHit(StatsRequest request) {
+    public ResponseEntity<?> getStats(StatsRequest request) {
         Map<String, Object> params = new HashMap<>();
         if (request.getUnique() != null) {
             params.put("unique", request.getUnique());
         }
         if (request.getUris() != null && !request.getUris().isEmpty()) {
-            params.put("uris", request.getUris());
+            params.put("uris", String.join(",", request.getUris()));
         }
-        params.put("start", request.getStart());
-        params.put("end", request.getEnd());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String start = request.getStart().format(formatter);
+        String end = request.getEnd().format(formatter);
+
+        params.put("start", start);
+        params.put("end", end);
         return get("/stats", params);
     }
 }

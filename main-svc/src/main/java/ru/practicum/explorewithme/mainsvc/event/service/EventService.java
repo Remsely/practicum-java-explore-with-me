@@ -2,27 +2,41 @@ package ru.practicum.explorewithme.mainsvc.event.service;
 
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
-import ru.practicum.explorewithme.mainsvc.event.dto.*;
-import ru.practicum.explorewithme.mainsvc.request.dto.RequestDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.creation.EventCreationDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.info.EventFullDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.info.EventShortDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.requests.EventsAdminRequest;
+import ru.practicum.explorewithme.mainsvc.event.dto.requests.EventsPublicRequest;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventAdminUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventRequestStatusUpdateRequestDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventRequestStatusUpdateResultDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventUserUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
 
 import java.util.List;
 
 public interface EventService {
-    EventDto addEvent(EventCreationDto dto, long userId);
+    EventFullDto addEvent(EventCreationDto dto, long userId);
 
-    EventDto updateEventByUser(long eventId, EventUserUpdateDto dto, long userId);
+    EventFullDto updateEventByUser(long eventId, EventUserUpdateDto dto, long userId);
 
-    EventDto updateEventByAdmin(long eventId, EventAdminUpdateDto dto);
+    EventFullDto updateEventByAdmin(long eventId, EventAdminUpdateDto dto);
 
-    EventDto getEventById(long eventId, long userId);
+    EventFullDto getUserEventById(long eventId, long userId);
+
+    EventFullDto getPublicEventById(long eventId);
 
     List<EventShortDto> getEventsByUser(long userId, PaginationRequest paginationRequest);
 
-    List<EventDto> getEventsByAdmin(PaginationRequest paginationRequest,
-                                    TimeRangeRequest timeRangeRequest,
-                                    EventsAdminRequests eventsAdminRequests);
+    List<EventFullDto> getEventsByAdmin(PaginationRequest paginationRequest,
+                                        TimeRangeRequest timeRangeRequest,
+                                        EventsAdminRequest eventsAdminRequests);
 
-    List<RequestDto> getEventRequestsByUser(long eventId, long userId);
+    List<EventShortDto> getPublicEvents(PaginationRequest paginationRequest,
+                                        TimeRangeRequest timeRangeRequest,
+                                        EventsPublicRequest eventsPublicRequest);
 
-    RequestStatusUpdateResultDto updateEventRequestsByUser(long eventId, RequestStatusUpdateRequestDto request, long userId);
+    List<EventRequestDto> getEventRequestsByUser(long eventId, long userId);
+
+    EventRequestStatusUpdateResultDto updateEventRequestsByUser(long eventId, EventRequestStatusUpdateRequestDto request, long userId);
 }

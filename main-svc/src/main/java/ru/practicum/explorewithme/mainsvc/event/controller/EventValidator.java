@@ -1,15 +1,14 @@
 package ru.practicum.explorewithme.mainsvc.event.controller;
 
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventAdminUpdateDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventCreationDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.EventUserUpdateDto;
-import ru.practicum.explorewithme.mainsvc.event.dto.RequestStatusUpdateRequestDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.creation.EventCreationDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventAdminUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventRequestStatusUpdateRequestDto;
+import ru.practicum.explorewithme.mainsvc.event.dto.update.EventUserUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.exception.DateTimeValidationException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
-import ru.practicum.explorewithme.mainsvc.request.entity.RequestStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,11 +30,11 @@ public class EventValidator {
         checkDateAfterPlusHours(dto.getEventDate(), 1, true);
     }
 
-    public void validateEventRequestStatusUpdateRequest(RequestStatusUpdateRequestDto request) {
-        checkStatusIn(request.getStatus(), List.of(RequestStatus.CONFIRMED, RequestStatus.REJECTED));
+    public void validateEventRequestStatusUpdateRequest(EventRequestStatusUpdateRequestDto request) {
+        checkStatusIn(request.getStatus(), List.of(EventRequestStatus.CONFIRMED, EventRequestStatus.REJECTED));
     }
 
-    private void checkStatusIn(RequestStatus status, List<RequestStatus> statuses) {
+    private void checkStatusIn(EventRequestStatus status, List<EventRequestStatus> statuses) {
         if (!statuses.contains(status)) {
             throw new DateTimeValidationException(
                     ErrorResponseDto.builder()

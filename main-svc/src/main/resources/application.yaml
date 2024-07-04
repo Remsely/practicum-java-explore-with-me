@@ -7,7 +7,7 @@ stat-svc:
 
 spring:
   application:
-    name: main-svc
+    name: ewm-main-service
 
   jpa:
     hibernate:
