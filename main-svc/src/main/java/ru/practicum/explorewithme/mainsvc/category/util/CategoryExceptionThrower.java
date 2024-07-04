@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.repository.CategoryRepository;
 import ru.practicum.explorewithme.mainsvc.common.utils.exceptions.ByIdExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
@@ -52,6 +53,19 @@ public class CategoryExceptionThrower implements ByIdExceptionThrower<Category, 
                             .status(HttpStatus.CONFLICT.toString())
                             .reason("Category name must be unique.")
                             .message("Category with name = " + name + " already exists.")
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
+        }
+    }
+
+    public void checkEventsExistence(long categoryId) {
+        if (categoryRepository.existsEventByCategoryId(categoryId)) {
+            throw new AccessRightsException(
+                    ErrorResponseDto.builder()
+                            .status(HttpStatus.CONFLICT.toString())
+                            .reason("Category has events.")
+                            .message("Category with id = " + categoryId + " has events. Cannot be deleted.")
                             .timestamp(LocalDateTime.now())
                             .build()
             );

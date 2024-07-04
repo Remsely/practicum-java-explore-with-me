@@ -41,6 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategory(Long catId) {
         categoryExceptionThrower.checkExistenceById(catId);
+        categoryExceptionThrower.checkEventsExistence(catId);
         categoryRepository.deleteById(catId);
         log.info("Category with id = {} has been deleted.", catId);
     }
