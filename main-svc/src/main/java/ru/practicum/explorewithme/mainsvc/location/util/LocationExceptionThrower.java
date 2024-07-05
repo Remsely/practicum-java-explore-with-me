@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.mainsvc.event.util;
+package ru.practicum.explorewithme.mainsvc.location.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -43,28 +43,6 @@ public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
                 .fetch();
     }
 
-    public void addPublishedFilter(JPAQuery<Event> query) {
-        query.where(qEntity.state.eq(EventState.PUBLISHED));
-    }
-
-    public void addTimeRangeFilter(JPAQuery<Event> query, TimeRangeRequest timeRangeRequest) {
-        LocalDateTime rangeStart = timeRangeRequest.getRangeStart();
-        if (rangeStart != null) {
-            query.where(qEntity.eventDate.goe(rangeStart));
-        }
-
-        LocalDateTime rangeEnd = timeRangeRequest.getRangeEnd();
-        if (rangeEnd != null) {
-            query.where(qEntity.eventDate.loe(rangeEnd));
-        }
-    }
-
-    public void addCategoriesFilter(JPAQuery<Event> query, List<Long> categoriesIds) {
-        if (categoriesIds != null && !categoriesIds.isEmpty()) {
-            query.where(qEntity.category.id.in(categoriesIds));
-        }
-    }
-
     public void addTextSearchFilter(JPAQuery<Event> query, String text) {
         if (text != null && !text.isBlank()) {
             String sqlText = "%" + text.toLowerCase() + "%";
@@ -72,6 +50,10 @@ public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
                     .or(qEntity.description.lower().like(sqlText))
             );
         }
+    }
+
+    public void addPublishedFilter(JPAQuery<Event> query) {
+        query.where(qEntity.state.eq(EventState.PUBLISHED));
     }
 
     public void addOnlyAvailableFilter(JPAQuery<Event> query, Boolean onlyAvailable) {
@@ -92,15 +74,33 @@ public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
         }
     }
 
-    public void addUsersFilter(JPAQuery<Event> query, List<Long> userIds) {
-        if (userIds != null && !userIds.isEmpty()) {
-            query.where(qEntity.initiator.id.in(userIds));
+    public void addCategoriesFilter(JPAQuery<Event> query, List<Long> categoriesIds) {
+        if (categoriesIds != null && !categoriesIds.isEmpty()) {
+            query.where(qEntity.category.id.in(categoriesIds));
         }
     }
 
     public void addStatesFilter(JPAQuery<Event> query, List<EventState> states) {
         if (states != null && !states.isEmpty()) {
             query.where(qEntity.state.in(states));
+        }
+    }
+
+    public void addUsersFilter(JPAQuery<Event> query, List<Long> userIds) {
+        if (userIds != null && !userIds.isEmpty()) {
+            query.where(qEntity.initiator.id.in(userIds));
+        }
+    }
+
+    public void addTimeRangeFilter(JPAQuery<Event> query, TimeRangeRequest timeRangeRequest) {
+        LocalDateTime rangeStart = timeRangeRequest.getRangeStart();
+        if (rangeStart != null) {
+            query.where(qEntity.eventDate.goe(rangeStart));
+        }
+
+        LocalDateTime rangeEnd = timeRangeRequest.getRangeEnd();
+        if (rangeEnd != null) {
+            query.where(qEntity.eventDate.loe(rangeEnd));
         }
     }
 

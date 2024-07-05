@@ -6,6 +6,6 @@ import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 
 @Getter
 @RequiredArgsConstructor
-public class EwmBaseRuntimeException extends RuntimeException{
+public abstract class EwmBaseRuntimeException extends RuntimeException {
     private final ErrorResponseDto response;
 }

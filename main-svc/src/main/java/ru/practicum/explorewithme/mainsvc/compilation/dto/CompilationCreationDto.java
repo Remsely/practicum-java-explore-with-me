@@ -14,7 +14,7 @@ public class CompilationCreationDto {
 
     private Boolean pinned;
 
-    @NotBlank
-    @Length(min = 3, max = 50)
+    @NotBlank(message = "Compilation title must not be blank.")
+    @Length(min = 3, max = 50, message = "Compilation title must be between 3 and 50 characters.")
     private String title;
 }

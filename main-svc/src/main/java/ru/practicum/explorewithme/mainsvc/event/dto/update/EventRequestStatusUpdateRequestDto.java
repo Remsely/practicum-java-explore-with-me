@@ -11,9 +11,10 @@ import java.util.List;
 @Data
 @Builder
 public class EventRequestStatusUpdateRequestDto {
-    @Size(min = 1)
+    @NotNull(message = "Request ids should not be undefined.")
+    @Size(min = 1, message = "Request ids should not be empty.")
     private List<Long> requestIds;
 
-    @NotNull
+    @NotNull(message = "Request status should not be undefined.")
     private EventRequestStatus status;
 }

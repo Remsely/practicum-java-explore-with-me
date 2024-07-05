@@ -78,6 +78,19 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
         }
     }
 
+    public void checkUserIsNotInitiator(User user, Event event) {
+        if (user.getId().equals(event.getInitiator().getId())) {
+            throw new AccessRightsException(ErrorResponseDto.builder()
+                    .status(HttpStatus.CONFLICT.toString())
+                    .reason("Access rights error.")
+                    .message("User with id = " + user.getId() + " is an initiator of the event with id = "
+                            + event.getId() + ".")
+                    .timestamp(LocalDateTime.now())
+                    .build()
+            );
+        }
+    }
+
     public void checkStatusIsPending(Event event) {
         if (event.getState() != EventState.PENDING) {
             throw new AccessRightsException(ErrorResponseDto.builder()
@@ -96,18 +109,6 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
                     .status(HttpStatus.CONFLICT.toString())
                     .reason("Incorrect event status.")
                     .message("Event " + event.getId() + " is not in " + EventState.PUBLISHED + " state.")
-                    .timestamp(LocalDateTime.now())
-                    .build()
-            );
-        }
-    }
-
-    public void checkEventIsPublic(Event event) {
-        if (event.getState() != EventState.PUBLISHED) {
-            throw new NotPublicException(ErrorResponseDto.builder()
-                    .status(HttpStatus.NOT_FOUND.toString())
-                    .reason("Public event not found.")
-                    .message("Public event with id = " + event.getId() + " not found.")
                     .timestamp(LocalDateTime.now())
                     .build()
             );
@@ -139,13 +140,12 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
         }
     }
 
-    public void checkUserIsNotInitiator(User user, Event event) {
-        if (user.getId().equals(event.getInitiator().getId())) {
-            throw new AccessRightsException(ErrorResponseDto.builder()
-                    .status(HttpStatus.CONFLICT.toString())
-                    .reason("Access rights error.")
-                    .message("User with id = " + user.getId() + " is an initiator of the event with id = "
-                            + event.getId() + ".")
+    public void checkEventIsPublic(Event event) {
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new NotPublicException(ErrorResponseDto.builder()
+                    .status(HttpStatus.NOT_FOUND.toString())
+                    .reason("Public event not found.")
+                    .message("Public event with id = " + event.getId() + " not found.")
                     .timestamp(LocalDateTime.now())
                     .build()
             );

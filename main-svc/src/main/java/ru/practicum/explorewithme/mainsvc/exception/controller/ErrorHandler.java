@@ -12,20 +12,32 @@ import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 @RestControllerAdvice
 public class ErrorHandler {
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseDto handleDateValidationException(DateTimeValidationException e) {
+        return logMessageAndGetResponse(e);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseDto handleIllegalStatus(IllegalStatusException e) {
+        return logMessageAndGetResponse(e);
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponseDto handleEntityNotFound(EntityNotFoundException e) {
         return logMessageAndGetResponse(e);
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponseDto handleAlreadyExists(AlreadyExistsException e) {
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponseDto handleNotPublic(NotPublicException e) {
         return logMessageAndGetResponse(e);
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponseDto handleDateValidationException(DateTimeValidationException e) {
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponseDto handleAlreadyExists(AlreadyExistsException e) {
         return logMessageAndGetResponse(e);
     }
 
@@ -38,18 +50,6 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponseDto handleRequestsAlreadyCompleted(RequestsAlreadyCompletedException e) {
-        return logMessageAndGetResponse(e);
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponseDto handleRequestsAlreadyCompleted(NotPublicException e) {
-        return logMessageAndGetResponse(e);
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponseDto handleRequestsAlreadyCompleted(IllegalStatusException e) {
         return logMessageAndGetResponse(e);
     }
 

@@ -13,6 +13,6 @@ public class CompilationUpdateDto {
 
     private Boolean pinned;
 
-    @Length(min = 3, max = 50)
+    @Length(min = 3, max = 50, message = "Compilation title must be between 3 and 50 characters.")
     private String title;
 }

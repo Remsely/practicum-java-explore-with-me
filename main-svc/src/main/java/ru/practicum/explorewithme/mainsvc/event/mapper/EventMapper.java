@@ -111,6 +111,12 @@ public class EventMapper {
                 .build();
     }
 
+    public Set<EventShortDto> toShortDtoList(Set<Event> events) {
+        return events.stream()
+                .map(this::toShortDto)
+                .collect(Collectors.toSet());
+    }
+
     public List<EventShortDto> toShortDtoList(List<Event> events,
                                               List<EventRequest> requests,
                                               List<StatDto> stats) {
@@ -122,12 +128,6 @@ public class EventMapper {
                         confirmedRequestsByEventsIds.getOrDefault(e.getId(), 0),
                         viewsByEventIds.getOrDefault(e.getId(), 0L)
                 )).collect(Collectors.toList());
-    }
-
-    public Set<EventShortDto> toShortDtoList(Set<Event> events) {
-        return events.stream()
-                .map(this::toShortDto)
-                .collect(Collectors.toSet());
     }
 
     public List<EventFullDto> toDtoList(List<Event> events,
