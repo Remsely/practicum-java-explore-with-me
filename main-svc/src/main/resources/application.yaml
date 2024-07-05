@@ -3,7 +3,7 @@ server:
 
 stat-svc:
   server:
-    url: http://localhost:9090
+    url: ${STAT_SVC_URL}
 
 spring:
   application:
@@ -38,3 +38,12 @@ spring:
     url: jdbc:h2:mem:ewm-main
     username: test
     password: test
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+stat-svc:
+  server:
+    url: http://localhost:9090
