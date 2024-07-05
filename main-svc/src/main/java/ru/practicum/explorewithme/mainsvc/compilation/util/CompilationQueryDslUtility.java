@@ -11,30 +11,41 @@ import ru.practicum.explorewithme.mainsvc.event.entity.QEvent;
 import ru.practicum.explorewithme.mainsvc.location.entity.QLocation;
 import ru.practicum.explorewithme.mainsvc.user.entity.QUser;
 
+import java.util.List;
+
 @Component
 public class CompilationQueryDslUtility extends QueryDslUtility<Compilation, QCompilation> {
-    @Override
-    public JPAQuery<Compilation> getQueryWithFetchJoins(QCompilation compilation) {
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+    public CompilationQueryDslUtility() {
+        super(QCompilation.compilation);
+    }
 
+    @Override
+    public JPAQuery<Compilation> getQuery() {
+        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+        return queryFactory.selectFrom(qEntity);
+    }
+
+    @Override
+    public List<Compilation> getQueryResultWithFetchJoins(JPAQuery<Compilation> query) {
         QEvent event = QEvent.event;
         QCategory category = QCategory.category;
         QUser user = QUser.user;
         QLocation location = QLocation.location;
 
-        return queryFactory.selectFrom(compilation)
-                .leftJoin(compilation.events, event).fetchJoin()
+        return query
+                .leftJoin(qEntity.events, event).fetchJoin()
                 .leftJoin(event.category, category).fetchJoin()
                 .leftJoin(event.initiator, user).fetchJoin()
-                .leftJoin(event.location, location).fetchJoin();
+                .leftJoin(event.location, location).fetchJoin()
+                .fetch();
     }
 
-    public void addPinnedFilter(JPAQuery<Compilation> query, QCompilation compilation, Boolean pinned) {
+    public void addPinnedFilter(JPAQuery<Compilation> query, Boolean pinned) {
         if (pinned != null) {
             if (pinned) {
-                query.where(compilation.pinned.isTrue());
+                query.where(qEntity.pinned.isTrue());
             } else {
-                query.where(compilation.pinned.isFalse());
+                query.where(qEntity.pinned.isFalse());
             }
         }
     }

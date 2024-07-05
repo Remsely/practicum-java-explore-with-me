@@ -10,7 +10,6 @@ import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationDto;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationUpdateDto;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationsRequest;
 import ru.practicum.explorewithme.mainsvc.compilation.entity.Compilation;
-import ru.practicum.explorewithme.mainsvc.compilation.entity.QCompilation;
 import ru.practicum.explorewithme.mainsvc.compilation.mapper.CompilationMapper;
 import ru.practicum.explorewithme.mainsvc.compilation.repository.CompilationRepository;
 import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationExceptionThrower;
@@ -84,14 +83,12 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public List<CompilationDto> getCompilations(CompilationsRequest compilationsRequest,
                                                 PaginationRequest paginationRequest) {
-        QCompilation compilation = QCompilation.compilation;
+        var query = compilationQueryDslUtility.getQuery();
 
-        var query = compilationQueryDslUtility.getQueryWithFetchJoins(compilation);
-
-        compilationQueryDslUtility.addPinnedFilter(query, compilation, compilationsRequest.getPinned());
+        compilationQueryDslUtility.addPinnedFilter(query, compilationsRequest.getPinned());
         compilationQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
-        List<Compilation> compilations = query.fetch();
+        List<Compilation> compilations = compilationQueryDslUtility.getQueryResultWithFetchJoins(query);
 
         List<CompilationDto> dtos = compilationMapper.toDtoList(compilations);
         log.info("Compilations have been found. List size: {}", dtos.size());

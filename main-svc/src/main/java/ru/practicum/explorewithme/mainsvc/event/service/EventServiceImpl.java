@@ -19,7 +19,6 @@ import ru.practicum.explorewithme.mainsvc.event.dto.requests.EventsPublicRequest
 import ru.practicum.explorewithme.mainsvc.event.dto.update.*;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.event.entity.EventState;
-import ru.practicum.explorewithme.mainsvc.event.entity.QEvent;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
 import ru.practicum.explorewithme.mainsvc.event.util.EventExceptionThrower;
@@ -160,16 +159,15 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> getEventsByAdmin(PaginationRequest paginationRequest,
                                                TimeRangeRequest timeRangeRequest,
                                                EventsAdminRequest eventsAdminRequests) {
-        QEvent event = QEvent.event;
-        JPAQuery<Event> query = eventQueryDslUtility.getQueryWithFetchJoins(event);
+        JPAQuery<Event> query = eventQueryDslUtility.getQuery();
 
-        eventQueryDslUtility.addUsersFilter(query, event, eventsAdminRequests.getUsers());
-        eventQueryDslUtility.addStatesFilter(query, event, eventsAdminRequests.getStates());
-        eventQueryDslUtility.addCategoriesFilter(query, event, eventsAdminRequests.getCategories());
-        eventQueryDslUtility.addTimeRangeFilter(query, event, timeRangeRequest);
+        eventQueryDslUtility.addUsersFilter(query, eventsAdminRequests.getUsers());
+        eventQueryDslUtility.addStatesFilter(query, eventsAdminRequests.getStates());
+        eventQueryDslUtility.addCategoriesFilter(query, eventsAdminRequests.getCategories());
+        eventQueryDslUtility.addTimeRangeFilter(query, timeRangeRequest);
         eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
-        List<Event> events = query.fetch();
+        List<Event> events = eventQueryDslUtility.getQueryResultWithFetchJoins(query);
         List<EventRequest> confirmedRequests = requestRepository.findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);
 
@@ -183,22 +181,21 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getPublicEvents(PaginationRequest paginationRequest,
                                                TimeRangeRequest timeRangeRequest,
                                                EventsPublicRequest eventsPublicRequest) {
-        QEvent event = QEvent.event;
-        JPAQuery<Event> query = eventQueryDslUtility.getQueryWithFetchJoins(event);
+        JPAQuery<Event> query = eventQueryDslUtility.getQuery();
 
-        eventQueryDslUtility.addPublishedFilter(query, event);
+        eventQueryDslUtility.addPublishedFilter(query);
 
-        eventQueryDslUtility.addTextSearchFilter(query, event, eventsPublicRequest.getText());
-        eventQueryDslUtility.addCategoriesFilter(query, event, eventsPublicRequest.getCategories());
-        eventQueryDslUtility.addPaidFilter(query, event, eventsPublicRequest.getPaid());
+        eventQueryDslUtility.addTextSearchFilter(query, eventsPublicRequest.getText());
+        eventQueryDslUtility.addCategoriesFilter(query, eventsPublicRequest.getCategories());
+        eventQueryDslUtility.addPaidFilter(query, eventsPublicRequest.getPaid());
 
         if (timeRangeRequest.getRangeStart() == null && timeRangeRequest.getRangeEnd() == null) {
-            eventQueryDslUtility.addFutureDateFilter(query, event);
+            eventQueryDslUtility.addFutureDateFilter(query);
         } else {
-            eventQueryDslUtility.addTimeRangeFilter(query, event, timeRangeRequest);
+            eventQueryDslUtility.addTimeRangeFilter(query, timeRangeRequest);
         }
 
-        eventQueryDslUtility.addOnlyAvailableFilter(query, event, eventsPublicRequest.getOnlyAvailable());
+        eventQueryDslUtility.addOnlyAvailableFilter(query, eventsPublicRequest.getOnlyAvailable());
 
         boolean isSortByViews = false;
         EventsPublicRequest.SortType sort = eventsPublicRequest.getSort();
@@ -208,14 +205,14 @@ public class EventServiceImpl implements EventService {
                     isSortByViews = true;
                     break;
                 case EVENT_DATE:
-                    eventQueryDslUtility.addOrderByEventDate(query, event);
+                    eventQueryDslUtility.addOrderByEventDate(query);
                     break;
             }
         }
 
         eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
-        List<Event> events = query.fetch();
+        List<Event> events = eventQueryDslUtility.getQueryResultWithFetchJoins(query);
         List<EventRequest> confirmedRequests = requestRepository
                 .findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);

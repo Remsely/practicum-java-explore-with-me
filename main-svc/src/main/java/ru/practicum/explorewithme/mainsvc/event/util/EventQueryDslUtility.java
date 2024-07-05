@@ -20,86 +20,95 @@ import java.util.List;
 
 @Component
 public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
-    @Override
-    public JPAQuery<Event> getQueryWithFetchJoins(QEvent event) {
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+    public EventQueryDslUtility() {
+        super(QEvent.event);
+    }
 
+    @Override
+    public JPAQuery<Event> getQuery() {
+        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+        return queryFactory.selectFrom(qEntity);
+    }
+
+    @Override
+    public List<Event> getQueryResultWithFetchJoins(JPAQuery<Event> query) {
         QCategory category = QCategory.category;
         QUser user = QUser.user;
         QLocation location = QLocation.location;
 
-        return queryFactory.selectFrom(event)
-                .leftJoin(event.category, category).fetchJoin()
-                .leftJoin(event.initiator, user).fetchJoin()
-                .leftJoin(event.location, location).fetchJoin();
+        return query
+                .leftJoin(qEntity.category, category).fetchJoin()
+                .leftJoin(qEntity.initiator, user).fetchJoin()
+                .leftJoin(qEntity.location, location).fetchJoin()
+                .fetch();
     }
 
-    public void addPublishedFilter(JPAQuery<Event> query, QEvent event) {
-        query.where(event.state.eq(EventState.PUBLISHED));
+    public void addPublishedFilter(JPAQuery<Event> query) {
+        query.where(qEntity.state.eq(EventState.PUBLISHED));
     }
 
-    public void addTimeRangeFilter(JPAQuery<Event> query, QEvent event, TimeRangeRequest timeRangeRequest) {
+    public void addTimeRangeFilter(JPAQuery<Event> query, TimeRangeRequest timeRangeRequest) {
         LocalDateTime rangeStart = timeRangeRequest.getRangeStart();
         if (rangeStart != null) {
-            query.where(event.eventDate.goe(rangeStart));
+            query.where(qEntity.eventDate.goe(rangeStart));
         }
 
         LocalDateTime rangeEnd = timeRangeRequest.getRangeEnd();
         if (rangeEnd != null) {
-            query.where(event.eventDate.loe(rangeEnd));
+            query.where(qEntity.eventDate.loe(rangeEnd));
         }
     }
 
-    public void addCategoriesFilter(JPAQuery<Event> query, QEvent event, List<Long> categoriesIds) {
+    public void addCategoriesFilter(JPAQuery<Event> query, List<Long> categoriesIds) {
         if (categoriesIds != null && !categoriesIds.isEmpty()) {
-            query.where(event.category.id.in(categoriesIds));
+            query.where(qEntity.category.id.in(categoriesIds));
         }
     }
 
-    public void addTextSearchFilter(JPAQuery<Event> query, QEvent event, String text) {
+    public void addTextSearchFilter(JPAQuery<Event> query, String text) {
         if (text != null && !text.isBlank()) {
             String sqlText = "%" + text.toLowerCase() + "%";
-            query.where(event.annotation.lower().like(sqlText)
-                    .or(event.description.lower().like(sqlText))
+            query.where(qEntity.annotation.lower().like(sqlText)
+                    .or(qEntity.description.lower().like(sqlText))
             );
         }
     }
 
-    public void addOnlyAvailableFilter(JPAQuery<Event> query, QEvent event, Boolean onlyAvailable) {
+    public void addOnlyAvailableFilter(JPAQuery<Event> query, Boolean onlyAvailable) {
         if (Boolean.TRUE.equals(onlyAvailable)) {
             QEventRequest request = QEventRequest.eventRequest;
             query.leftJoin(request)
-                    .on(request.event.eq(event).and(request.status.eq(EventRequestStatus.CONFIRMED)))
-                    .groupBy(event.id)
-                    .having(request.count().lt(event.participantLimit)
-                            .or(event.participantLimit.eq(0)));
+                    .on(request.event.eq(qEntity).and(request.status.eq(EventRequestStatus.CONFIRMED)))
+                    .groupBy(qEntity.id)
+                    .having(request.count().lt(qEntity.participantLimit)
+                            .or(qEntity.participantLimit.eq(0)));
         }
     }
 
-    public void addPaidFilter(JPAQuery<Event> query, QEvent event, Boolean paid) {
+    public void addPaidFilter(JPAQuery<Event> query, Boolean paid) {
         if (paid != null) {
-            BooleanExpression paidFilter = paid ? event.paid.isTrue() : event.paid.isFalse();
+            BooleanExpression paidFilter = paid ? qEntity.paid.isTrue() : qEntity.paid.isFalse();
             query.where(paidFilter);
         }
     }
 
-    public void addUsersFilter(JPAQuery<Event> query, QEvent event, List<Long> userIds) {
+    public void addUsersFilter(JPAQuery<Event> query, List<Long> userIds) {
         if (userIds != null && !userIds.isEmpty()) {
-            query.where(event.initiator.id.in(userIds));
+            query.where(qEntity.initiator.id.in(userIds));
         }
     }
 
-    public void addStatesFilter(JPAQuery<Event> query, QEvent event, List<EventState> states) {
+    public void addStatesFilter(JPAQuery<Event> query, List<EventState> states) {
         if (states != null && !states.isEmpty()) {
-            query.where(event.state.in(states));
+            query.where(qEntity.state.in(states));
         }
     }
 
-    public void addFutureDateFilter(JPAQuery<Event> query, QEvent event) {
-        query.where(event.eventDate.gt(LocalDateTime.now()));
+    public void addFutureDateFilter(JPAQuery<Event> query) {
+        query.where(qEntity.eventDate.gt(LocalDateTime.now()));
     }
 
-    public void addOrderByEventDate(JPAQuery<Event> query, QEvent event) {
-        query.orderBy(event.eventDate.desc());
+    public void addOrderByEventDate(JPAQuery<Event> query) {
+        query.orderBy(qEntity.eventDate.desc());
     }
 }
