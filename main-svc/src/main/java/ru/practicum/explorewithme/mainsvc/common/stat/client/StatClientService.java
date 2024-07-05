@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StatClientService {
     @Value("${spring.application.name}")
-    private final static String APP_NAME = "ewm-main-service";
+    private static final String APP_NAME = "ewm-main-service";
 
-    private final static String EVENT_URI = "/events/";
+    private static final String EVENT_URI = "/events/";
 
     private final ObjectMapper objectMapper;
     private final StatClient statClient;
