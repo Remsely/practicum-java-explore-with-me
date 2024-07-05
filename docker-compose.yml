@@ -44,7 +44,7 @@ services:
       - POSTGRES_USER=test
       - POSTGRES_PASSWORD=test
       - DB_HOST=main-db
-      - DB_PORT=5430
+      - DB_PORT=5432
     ports:
       - "8080:8080"
 
