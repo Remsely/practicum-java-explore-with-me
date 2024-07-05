@@ -4,16 +4,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationCreationDto;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationDto;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationUpdateDto;
+import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationsRequest;
 import ru.practicum.explorewithme.mainsvc.compilation.entity.Compilation;
+import ru.practicum.explorewithme.mainsvc.compilation.entity.QCompilation;
 import ru.practicum.explorewithme.mainsvc.compilation.mapper.CompilationMapper;
 import ru.practicum.explorewithme.mainsvc.compilation.repository.CompilationRepository;
 import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationQueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.event.util.EventExceptionThrower;
 
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -23,6 +28,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationExceptionThrower compilationExceptionThrower;
     private final CompilationMapper compilationMapper;
+    private final CompilationQueryDslUtility compilationQueryDslUtility;
 
     private final EventExceptionThrower eventExceptionThrower;
 
@@ -49,7 +55,7 @@ public class CompilationServiceImpl implements CompilationService {
     public void deleteCompilation(long compId) {
         compilationExceptionThrower.checkExistenceById(compId);
         compilationRepository.deleteById(compId);
-        log.info("Compilation with id: {} has been deleted", compId);
+        log.info("Compilation with id: {} has been deleted.", compId);
     }
 
     @Transactional
@@ -61,8 +67,35 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation updatedCompilation = compilationRepository.save(compilation);
 
         CompilationDto result = compilationMapper.toDto(updatedCompilation);
-        log.info("Compilation with id: {} has been updated", compId);
+        log.info("Compilation with id: {} has been updated.", compId);
         return result;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public CompilationDto getCompilationById(long compId) {
+        Compilation compilation = compilationExceptionThrower.findById(compId);
+        CompilationDto dto = compilationMapper.toDto(compilation);
+        log.info("Compilation with id: {} has been found.", compId);
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CompilationDto> getCompilations(CompilationsRequest compilationsRequest,
+                                                PaginationRequest paginationRequest) {
+        QCompilation compilation = QCompilation.compilation;
+
+        var query = compilationQueryDslUtility.getQueryWithFetchJoins(compilation);
+
+        compilationQueryDslUtility.addPinnedFilter(query, compilation, compilationsRequest.getPinned());
+        compilationQueryDslUtility.addPaginationFilter(query, paginationRequest);
+
+        List<Compilation> compilations = query.fetch();
+
+        List<CompilationDto> dtos = compilationMapper.toDtoList(compilations);
+        log.info("Compilations have been found. List size: {}", dtos.size());
+        return dtos;
     }
 
     private void updateCompilationProperties(Compilation updating, CompilationUpdateDto updater) {
