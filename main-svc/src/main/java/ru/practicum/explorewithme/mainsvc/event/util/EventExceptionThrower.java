@@ -17,6 +17,7 @@ import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +49,21 @@ public class EventExceptionThrower implements ByIdExceptionThrower<Event, Long> 
                             .build()
             );
         }
+    }
+
+    public Set<Event> findByIdIn(Set<Long> ids) {
+        Set<Event> events = eventRepository.findByIdIn(ids);
+        if (events.size() != ids.size()) {
+            throw new EntityNotFoundException(
+                    ErrorResponseDto.builder()
+                            .status(HttpStatus.NOT_FOUND.toString())
+                            .reason("Event not found.")
+                            .message("Not all events with ids = " + ids + " found.")
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
+        }
+        return events;
     }
 
     public void checkUserIsInitiator(User user, Event event) {

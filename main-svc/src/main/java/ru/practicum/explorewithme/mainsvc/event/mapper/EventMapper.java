@@ -15,6 +15,7 @@ import ru.practicum.explorewithme.statsvc.common.dto.StatDto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -96,6 +97,20 @@ public class EventMapper {
                 .build();
     }
 
+    public EventShortDto toShortDto(Event event) {
+        return EventShortDto.builder()
+                .id(event.getId())
+                .annotation(event.getAnnotation())
+                .category(categoryMapper.toDto(event.getCategory()))
+                .confirmedRequests(null)
+                .eventDate(event.getEventDate())
+                .initiator(userMapper.toDto(event.getInitiator()))
+                .paid(event.getPaid())
+                .title(event.getTitle())
+                .views(null)
+                .build();
+    }
+
     public List<EventShortDto> toShortDtoList(List<Event> events,
                                               List<EventRequest> requests,
                                               List<StatDto> stats) {
@@ -107,6 +122,12 @@ public class EventMapper {
                         confirmedRequestsByEventsIds.getOrDefault(e.getId(), 0),
                         viewsByEventIds.getOrDefault(e.getId(), 0L)
                 )).collect(Collectors.toList());
+    }
+
+    public Set<EventShortDto> toShortDtoList(Set<Event> events) {
+        return events.stream()
+                .map(this::toShortDto)
+                .collect(Collectors.toSet());
     }
 
     public List<EventFullDto> toDtoList(List<Event> events,
