@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
-import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientHelper;
+import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
 import ru.practicum.explorewithme.mainsvc.event.dto.info.EventFullDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.info.EventShortDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.requests.EventsPublicRequest;
@@ -21,13 +21,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventPublicController {
     private final EventService eventService;
-    private final StatClientHelper statClientHelper;
+    private final StatClientService statClientService;
 
     @GetMapping("/{eventId}")
     public EventFullDto getPublicEvent(@PathVariable long eventId, HttpServletRequest request) {
         log.info("GET /events/{}", eventId);
         EventFullDto event = eventService.getPublicEventById(eventId);
-        statClientHelper.sendStat(request);
+        statClientService.sendStat(request);
         return event;
     }
 
@@ -44,7 +44,7 @@ public class EventPublicController {
                 paginationRequest.getFrom(), paginationRequest.getSize()
         );
         List<EventShortDto> events = eventService.getPublicEvents(paginationRequest, timeRangeRequest, eventsPublicRequest);
-        statClientHelper.sendStat(httpServletRequest);
+        statClientService.sendStat(httpServletRequest);
         return events;
     }
 }

@@ -1,18 +1,15 @@
 package ru.practicum.explorewithme.mainsvc.event.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
-import ru.practicum.explorewithme.mainsvc.category.entity.QCategory;
 import ru.practicum.explorewithme.mainsvc.category.util.CategoryExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
-import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientHelper;
+import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
 import ru.practicum.explorewithme.mainsvc.event.dto.creation.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.info.EventFullDto;
@@ -26,24 +23,20 @@ import ru.practicum.explorewithme.mainsvc.event.entity.QEvent;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
 import ru.practicum.explorewithme.mainsvc.event.util.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.event.util.EventQueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
-import ru.practicum.explorewithme.mainsvc.event_request.entity.QEventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.mapper.EventRequestMapper;
 import ru.practicum.explorewithme.mainsvc.event_request.repository.EventRequestRepository;
 import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestExceptionThrower;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
-import ru.practicum.explorewithme.mainsvc.location.entity.QLocation;
 import ru.practicum.explorewithme.mainsvc.location.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.location.service.LocationService;
-import ru.practicum.explorewithme.mainsvc.user.entity.QUser;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 import ru.practicum.explorewithme.mainsvc.user.util.UserExceptionThrower;
 import ru.practicum.explorewithme.statsvc.common.dto.StatDto;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -56,6 +49,7 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
     private final EventExceptionThrower eventExceptionThrower;
+    private final EventQueryDslUtility eventQueryDslUtility;
 
     private final EventRequestMapper requestMapper;
     private final EventRequestRepository requestRepository;
@@ -70,10 +64,7 @@ public class EventServiceImpl implements EventService {
 
     private final PageableUtility pageableUtility;
 
-    private final StatClientHelper statClientHelper;
-
-    @PersistenceContext
-    private EntityManager em;
+    private final StatClientService statClientService;
 
     @Transactional
     @Override
@@ -170,13 +161,13 @@ public class EventServiceImpl implements EventService {
                                                TimeRangeRequest timeRangeRequest,
                                                EventsAdminRequest eventsAdminRequests) {
         QEvent event = QEvent.event;
-        JPAQuery<Event> query = getQueryWithFetchJoins(event);
+        JPAQuery<Event> query = eventQueryDslUtility.getQueryWithFetchJoins(event);
 
-        addUsersFilter(query, event, eventsAdminRequests.getUsers());
-        addStatesFilter(query, event, eventsAdminRequests.getStates());
-        addCategoriesFilter(query, event, eventsAdminRequests.getCategories());
-        addTimeRangeFilter(query, event, timeRangeRequest);
-        addPaginationFilter(query, paginationRequest);
+        eventQueryDslUtility.addUsersFilter(query, event, eventsAdminRequests.getUsers());
+        eventQueryDslUtility.addStatesFilter(query, event, eventsAdminRequests.getStates());
+        eventQueryDslUtility.addCategoriesFilter(query, event, eventsAdminRequests.getCategories());
+        eventQueryDslUtility.addTimeRangeFilter(query, event, timeRangeRequest);
+        eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
         List<Event> events = query.fetch();
         List<EventRequest> confirmedRequests = requestRepository.findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
@@ -193,21 +184,21 @@ public class EventServiceImpl implements EventService {
                                                TimeRangeRequest timeRangeRequest,
                                                EventsPublicRequest eventsPublicRequest) {
         QEvent event = QEvent.event;
-        JPAQuery<Event> query = getQueryWithFetchJoins(event);
+        JPAQuery<Event> query = eventQueryDslUtility.getQueryWithFetchJoins(event);
 
-        query.where(event.state.eq(EventState.PUBLISHED));
+        eventQueryDslUtility.addPublishedFilter(query, event);
 
-        addTextSearchFilter(query, event, eventsPublicRequest.getText());
-        addCategoriesFilter(query, event, eventsPublicRequest.getCategories());
-        addPaidFilter(query, event, eventsPublicRequest.getPaid());
+        eventQueryDslUtility.addTextSearchFilter(query, event, eventsPublicRequest.getText());
+        eventQueryDslUtility.addCategoriesFilter(query, event, eventsPublicRequest.getCategories());
+        eventQueryDslUtility.addPaidFilter(query, event, eventsPublicRequest.getPaid());
 
         if (timeRangeRequest.getRangeStart() == null && timeRangeRequest.getRangeEnd() == null) {
-            query.where(event.eventDate.gt(LocalDateTime.now()));
+            eventQueryDslUtility.addFutureDateFilter(query, event);
         } else {
-            addTimeRangeFilter(query, event, timeRangeRequest);
+            eventQueryDslUtility.addTimeRangeFilter(query, event, timeRangeRequest);
         }
 
-        addOnlyAvailableFilter(query, event, eventsPublicRequest.getOnlyAvailable());
+        eventQueryDslUtility.addOnlyAvailableFilter(query, event, eventsPublicRequest.getOnlyAvailable());
 
         boolean isSortByViews = false;
         EventsPublicRequest.SortType sort = eventsPublicRequest.getSort();
@@ -217,15 +208,16 @@ public class EventServiceImpl implements EventService {
                     isSortByViews = true;
                     break;
                 case EVENT_DATE:
-                    query.orderBy(event.eventDate.desc());
+                    eventQueryDslUtility.addOrderByEventDate(query, event);
                     break;
             }
         }
 
-        addPaginationFilter(query, paginationRequest);
+        eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
         List<Event> events = query.fetch();
-        List<EventRequest> confirmedRequests = requestRepository.findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
+        List<EventRequest> confirmedRequests = requestRepository
+                .findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);
 
         List<EventShortDto> dtos = eventMapper.toShortDtoList(events, confirmedRequests, stats);
@@ -368,84 +360,8 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private JPAQuery<Event> getQueryWithFetchJoins(QEvent event) {
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
-
-        QCategory category = QCategory.category;
-        QUser user = QUser.user;
-        QLocation location = QLocation.location;
-
-        return queryFactory.selectFrom(event)
-                .leftJoin(event.category, category).fetchJoin()
-                .leftJoin(event.initiator, user).fetchJoin()
-                .leftJoin(event.location, location).fetchJoin();
-    }
-
-    private void addTimeRangeFilter(JPAQuery<Event> query, QEvent event, TimeRangeRequest timeRangeRequest) {
-        LocalDateTime rangeStart = timeRangeRequest.getRangeStart();
-        if (rangeStart != null) {
-            query.where(event.eventDate.goe(rangeStart));
-        }
-
-        LocalDateTime rangeEnd = timeRangeRequest.getRangeEnd();
-        if (rangeEnd != null) {
-            query.where(event.eventDate.loe(rangeEnd));
-        }
-    }
-
-    private void addPaginationFilter(JPAQuery<?> query, PaginationRequest paginationRequest) {
-        Integer from = paginationRequest.getFrom();
-        Integer size = paginationRequest.getSize();
-        query.offset(from == null ? 0 : from).limit(size == null ? 10 : size);
-    }
-
-    private void addCategoriesFilter(JPAQuery<Event> query, QEvent event, List<Long> categoriesIds) {
-        if (categoriesIds != null && !categoriesIds.isEmpty()) {
-            query.where(event.category.id.in(categoriesIds));
-        }
-    }
-
-    private void addTextSearchFilter(JPAQuery<Event> query, QEvent event, String text) {
-        if (text != null && !text.isBlank()) {
-            String sqlText = "%" + text.toLowerCase() + "%";
-            query.where(event.annotation.lower().like(sqlText)
-                    .or(event.description.lower().like(sqlText))
-            );
-        }
-    }
-
-    private void addOnlyAvailableFilter(JPAQuery<Event> query, QEvent event, Boolean onlyAvailable) {
-        if (Boolean.TRUE.equals(onlyAvailable)) {
-            QEventRequest request = QEventRequest.eventRequest;
-            query.leftJoin(request)
-                    .on(request.event.eq(event).and(request.status.eq(EventRequestStatus.CONFIRMED)))
-                    .groupBy(event.id)
-                    .having(request.count().lt(event.participantLimit)
-                            .or(event.participantLimit.eq(0)));
-        }
-    }
-
-    private void addPaidFilter(JPAQuery<Event> query, QEvent event, Boolean paid) {
-        if (paid != null) {
-            BooleanExpression paidFilter = paid ? event.paid.isTrue() : event.paid.isFalse();
-            query.where(paidFilter);
-        }
-    }
-
-    private void addUsersFilter(JPAQuery<Event> query, QEvent event, List<Long> userIds) {
-        if (userIds != null && !userIds.isEmpty()) {
-            query.where(event.initiator.id.in(userIds));
-        }
-    }
-
-    private void addStatesFilter(JPAQuery<Event> query, QEvent event, List<EventState> states) {
-        if (states != null && !states.isEmpty()) {
-            query.where(event.state.in(states));
-        }
-    }
-
     private long getEventViews(Event event) {
-        List<StatDto> stats = statClientHelper.getStats(
+        List<StatDto> stats = statClientService.getEventsStats(
                 List.of(event.getId()),
                 event.getPublishedOn(),
                 LocalDateTime.now()
@@ -457,7 +373,7 @@ public class EventServiceImpl implements EventService {
         List<Long> eventIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
-        return statClientHelper.getStats(
+        return statClientService.getEventsStats(
                 eventIds,
                 LocalDateTime.of(1970, 1, 1, 0, 0),
                 LocalDateTime.now());

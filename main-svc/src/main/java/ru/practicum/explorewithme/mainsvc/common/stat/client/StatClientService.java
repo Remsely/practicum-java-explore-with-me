@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class StatClientHelper {
+public class StatClientService {
     @Value("${spring.application.name}")
     private final static String APP_NAME = "ewm-main-service";
 
@@ -41,7 +41,7 @@ public class StatClientHelper {
         statClient.postHit(dto);
     }
 
-    public List<StatDto> getStats(List<Long> eventIds, LocalDateTime start, LocalDateTime end) {
+    public List<StatDto> getEventsStats(List<Long> eventIds, LocalDateTime start, LocalDateTime end) {
         List<String> uris = eventIds == null || eventIds.isEmpty()
                 ? null : eventIds.stream()
                 .map(id -> EVENT_URI + id)
