@@ -5,15 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
-import ru.practicum.explorewithme.mainsvc.event.util.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.event.util.EventGuardService;
 import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.event_request.mapper.EventRequestMapper;
 import ru.practicum.explorewithme.mainsvc.event_request.repository.EventRequestRepository;
-import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestGuardService;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
-import ru.practicum.explorewithme.mainsvc.user.util.UserExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.user.util.UserGuardService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,13 +22,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EventRequestServiceImpl implements EventRequestService {
-    private final EventRequestExceptionThrower requestExceptionThrower;
+    private final EventRequestGuardService requestExceptionThrower;
     private final EventRequestRepository requestRepository;
     private final EventRequestMapper requestMapper;
 
-    private final EventExceptionThrower eventExceptionThrower;
+    private final EventGuardService eventExceptionThrower;
 
-    private final UserExceptionThrower userExceptionThrower;
+    private final UserGuardService userExceptionThrower;
 
     @Transactional
     @Override

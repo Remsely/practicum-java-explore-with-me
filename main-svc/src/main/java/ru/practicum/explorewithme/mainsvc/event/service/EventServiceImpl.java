@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
-import ru.practicum.explorewithme.mainsvc.category.util.CategoryExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.category.util.CategoryGuardService;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
@@ -21,19 +21,19 @@ import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.event.entity.EventState;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
-import ru.practicum.explorewithme.mainsvc.event.util.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.event.util.EventGuardService;
 import ru.practicum.explorewithme.mainsvc.event.util.EventQueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.event_request.mapper.EventRequestMapper;
 import ru.practicum.explorewithme.mainsvc.event_request.repository.EventRequestRepository;
-import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestGuardService;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 import ru.practicum.explorewithme.mainsvc.location.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.location.service.LocationService;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
-import ru.practicum.explorewithme.mainsvc.user.util.UserExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.user.util.UserGuardService;
 import ru.practicum.explorewithme.statsvc.common.dto.StatDto;
 
 import java.time.LocalDateTime;
@@ -47,19 +47,19 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
-    private final EventExceptionThrower eventExceptionThrower;
+    private final EventGuardService eventExceptionThrower;
     private final EventQueryDslUtility eventQueryDslUtility;
 
     private final EventRequestMapper requestMapper;
     private final EventRequestRepository requestRepository;
-    private final EventRequestExceptionThrower requestExceptionThrower;
+    private final EventRequestGuardService requestExceptionThrower;
 
     private final LocationService locationService;
     private final LocationMapper locationMapper;
 
-    private final CategoryExceptionThrower categoryExceptionThrower;
+    private final CategoryGuardService categoryExceptionChecker;
 
-    private final UserExceptionThrower userExceptionThrower;
+    private final UserGuardService userExceptionThrower;
 
     private final PageableUtility pageableUtility;
 
@@ -69,7 +69,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto addEvent(EventCreationDto dto, long userId) {
         User user = userExceptionThrower.findById(userId);
-        Category category = categoryExceptionThrower.findById(dto.getCategory());
+        Category category = categoryExceptionChecker.findById(dto.getCategory());
         Event event = eventMapper.toEntity(dto);
 
         event.setInitiator(user);
@@ -343,7 +343,7 @@ public class EventServiceImpl implements EventService {
     private void updateCategory(Event updating, EventUpdateDto updater) {
         Long categoryId = updater.getCategory();
         if (categoryId != null && !categoryId.equals(updating.getCategory().getId())) {
-            Category category = categoryExceptionThrower.findById(categoryId);
+            Category category = categoryExceptionChecker.findById(categoryId);
             updating.setCategory(category);
         }
     }

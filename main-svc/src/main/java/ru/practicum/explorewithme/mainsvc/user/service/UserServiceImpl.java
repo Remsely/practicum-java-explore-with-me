@@ -11,7 +11,7 @@ import ru.practicum.explorewithme.mainsvc.user.dto.UserDto;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
 import ru.practicum.explorewithme.mainsvc.user.repository.UserRepository;
-import ru.practicum.explorewithme.mainsvc.user.util.UserExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.user.util.UserGuardService;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
-    private final UserExceptionThrower userExceptionThrower;
+    private final UserGuardService userExceptionThrower;
     private final UserRepository userRepository;
     private final PageableUtility pageableUtility;
 

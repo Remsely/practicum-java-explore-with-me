@@ -12,10 +12,10 @@ import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationsRequest;
 import ru.practicum.explorewithme.mainsvc.compilation.entity.Compilation;
 import ru.practicum.explorewithme.mainsvc.compilation.mapper.CompilationMapper;
 import ru.practicum.explorewithme.mainsvc.compilation.repository.CompilationRepository;
-import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationGuardService;
 import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationQueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
-import ru.practicum.explorewithme.mainsvc.event.util.EventExceptionThrower;
+import ru.practicum.explorewithme.mainsvc.event.util.EventGuardService;
 
 import java.util.List;
 import java.util.Set;
@@ -25,11 +25,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
-    private final CompilationExceptionThrower compilationExceptionThrower;
+    private final CompilationGuardService compilationExceptionThrower;
     private final CompilationMapper compilationMapper;
     private final CompilationQueryDslUtility compilationQueryDslUtility;
 
-    private final EventExceptionThrower eventExceptionThrower;
+    private final EventGuardService eventExceptionThrower;
 
     @Transactional
     @Override

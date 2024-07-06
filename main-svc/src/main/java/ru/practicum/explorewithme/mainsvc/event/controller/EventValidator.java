@@ -1,6 +1,5 @@
 package ru.practicum.explorewithme.mainsvc.event.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import ru.practicum.explorewithme.mainsvc.event.dto.creation.EventCreationDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.update.EventAdminUpdateDto;
@@ -8,7 +7,7 @@ import ru.practicum.explorewithme.mainsvc.event.dto.update.EventRequestStatusUpd
 import ru.practicum.explorewithme.mainsvc.event.dto.update.EventUserUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.exception.DateTimeValidationException;
-import ru.practicum.explorewithme.mainsvc.exception.dto.ErrorResponseDto;
+import ru.practicum.explorewithme.mainsvc.exception.IllegalStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,13 +35,7 @@ public class EventValidator {
 
     private void checkStatusIn(EventRequestStatus status, List<EventRequestStatus> statuses) {
         if (!statuses.contains(status)) {
-            throw new DateTimeValidationException(
-                    ErrorResponseDto.builder()
-                            .status(HttpStatus.BAD_REQUEST.toString())
-                            .reason("Incorrectly made request.")
-                            .message("Field: status. Error: status must be one of: " + statuses)
-                            .build()
-            );
+            throw new IllegalStatusException("Status must be one of " + statuses + ".");
         }
     }
 
@@ -51,23 +44,10 @@ public class EventValidator {
             return;
         }
         if (eventDate == null) {
-            throw new DateTimeValidationException(
-                    ErrorResponseDto.builder()
-                            .status(HttpStatus.BAD_REQUEST.toString())
-                            .reason("Incorrectly made request.")
-                            .message("Field: eventDate. Error: event date must be specified.")
-                            .build()
-            );
+            throw new DateTimeValidationException("Event date must be provided.");
         }
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(hours))) {
-            throw new DateTimeValidationException(
-                    ErrorResponseDto.builder()
-                            .status(HttpStatus.BAD_REQUEST.toString())
-                            .reason("Incorrectly made request.")
-                            .message("Field: eventDate. Error: event date must be at least 2 hours in the future. " +
-                                    "Value: " + eventDate)
-                            .build()
-            );
+            throw new DateTimeValidationException("Event must be at least 2 hours in the future.");
         }
     }
 
