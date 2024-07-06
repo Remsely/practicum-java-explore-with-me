@@ -25,7 +25,7 @@ public class EventPublicController {
 
     @GetMapping("/{eventId}")
     public EventFullDto getPublicEvent(@PathVariable long eventId, HttpServletRequest request) {
-        log.info("GET /events/{}", eventId);
+        log.info("Get public event with id {} (/events/{} GET).", eventId, eventId);
         EventFullDto event = eventService.getPublicEventById(eventId);
         statClientService.sendStat(request);
         return event;
@@ -37,9 +37,10 @@ public class EventPublicController {
                                                @ModelAttribute @Validated EventsPublicRequest eventsPublicRequest,
                                                HttpServletRequest httpServletRequest) {
         timeRangeRequest.validate();
-        log.info("GET /events?text={}&categories={}&paid={}&onlyAvailable={}&sort={}&rangeStart={}&rangeEnd={}" +
-                        "&from={}&size={}", eventsPublicRequest.getText(), eventsPublicRequest.getCategories(),
-                eventsPublicRequest.getPaid(), eventsPublicRequest.getOnlyAvailable(), eventsPublicRequest.getSort(),
+        log.info("Get public events (/events?text={}&categories={}&paid={}&onlyAvailable={}&sort={}" +
+                        "&rangeStart={}&rangeEnd={}&from={}&size={} GET).",
+                eventsPublicRequest.getText(), eventsPublicRequest.getCategories(), eventsPublicRequest.getPaid(),
+                eventsPublicRequest.getOnlyAvailable(), eventsPublicRequest.getSort(),
                 timeRangeRequest.getRangeStart(), timeRangeRequest.getRangeEnd(),
                 paginationRequest.getFrom(), paginationRequest.getSize()
         );

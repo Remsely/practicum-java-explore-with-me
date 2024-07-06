@@ -21,13 +21,13 @@ public class CategoryPublicController {
 
     @GetMapping("/{catId}")
     public CategoryDto getCategory(@PathVariable @Positive Long catId) {
-        log.info("/categories/{} GET.", catId);
+        log.info("Get category with id {} (/categories/{} GET).", catId, catId);
         return categoryService.getCategoryById(catId);
     }
 
     @GetMapping
     public List<CategoryDto> getCategories(@ModelAttribute @Validated PaginationRequest request) {
-        log.info("/categories?from={}&size={} GET.", request.getFrom(), request.getSize());
+        log.info("Get categories (/categories?from={}&size={} GET).", request.getFrom(), request.getSize());
         return categoryService.getCategories(request);
     }
 }

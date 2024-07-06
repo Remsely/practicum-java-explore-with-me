@@ -29,7 +29,7 @@ public class EventPrivateController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto postEvent(@RequestBody @Valid EventCreationDto eventDto, @PathVariable long userId) {
-        log.info("POST /users/{}/events. Body : {}", userId, eventDto);
+        log.info("Crete event by user with id {} (/users/{}/events POST). Body : {}", userId, userId, eventDto);
         eventValidator.validateEventCreationDto(eventDto);
         return eventService.addEvent(eventDto, userId);
     }
@@ -37,35 +37,39 @@ public class EventPrivateController {
     @PatchMapping("/{eventId}")
     public EventFullDto patchEvent(@RequestBody @Valid EventUserUpdateDto eventDto,
                                    @PathVariable long userId, @PathVariable long eventId) {
-        log.info("PATCH /users/{}/events/{}. Body : {}", userId, eventId, eventDto);
+        log.info("Update event with id {} by user with id {} (/users/{}/events/{} PATCH). Body : {}",
+                eventId, userId, userId, eventId, eventDto);
         eventValidator.validateEventUserUpdateDto(eventDto);
         return eventService.updateEventByUser(eventId, eventDto, userId);
     }
 
     @GetMapping("/{eventId}")
     public EventFullDto getEvent(@PathVariable long userId, @PathVariable long eventId) {
-        log.info("GET /users/{}/events/{}", userId, eventId);
+        log.info("Get event with id {} by user with id {} (/users/{}/events/{} GET).",
+                eventId, userId, userId, eventId);
         return eventService.getUserEventById(eventId, userId);
     }
 
     @GetMapping
     public List<EventShortDto> getEventsByUser(@PathVariable long userId,
                                                @ModelAttribute @Validated PaginationRequest request) {
-        log.info("GET /users/{}/events?from={}&size={}", userId, request.getFrom(), request.getSize());
+        log.info("Get events by user with id {} (/users/{}/events?from={}&size={} GET).",
+                userId, userId, request.getFrom(), request.getSize());
         return eventService.getEventsByUser(userId, request);
     }
 
     @PatchMapping("/{eventId}/requests")
     public EventRequestStatusUpdateResultDto patchEventRequest(@RequestBody @Valid EventRequestStatusUpdateRequestDto request,
                                                                @PathVariable long userId, @PathVariable long eventId) {
-        log.info("PATCH /users/{}/events/{}/requests. Body : {}", userId, eventId, request);
+        log.info("Update event requests status by user with id {} (/users/{}/events/{}/requests PATCH). Body : {}",
+                userId, userId, eventId, request);
         eventValidator.validateEventRequestStatusUpdateRequest(request);
         return eventService.updateEventRequestsByUser(eventId, request, userId);
     }
 
     @GetMapping("/{eventId}/requests")
     public List<EventRequestDto> getEventRequests(@PathVariable long userId, @PathVariable long eventId) {
-        log.info("GET /users/{}/events/{}/requests", userId, eventId);
+        log.info("Get event requests by user with id {} (/users/{}/events/{}/requests GET).", userId, userId, eventId);
         return eventService.getEventRequestsByUser(eventId, userId);
     }
 }

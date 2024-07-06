@@ -22,21 +22,22 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto addUser(@RequestBody @Valid UserDto userDto) {
-        log.info("/admin/users POST. Body : {}", userDto);
+        log.info("Create user (/admin/users POST). Body : {}", userDto);
         return userService.addUser(userDto);
     }
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable long userId) {
-        log.info("/admin/users/{} DELETE.", userId);
+        log.info("Delete user with id {} (/admin/users/{} DELETE).", userId, userId);
         userService.deleteUser(userId);
     }
 
     @GetMapping
     public List<UserDto> getUsers(@ModelAttribute @Validated PaginationRequest request,
                                   @RequestParam(required = false) List<Long> ids) {
-        log.info("/admin/users?from={}&size={}&ids={} GET", request.getFrom(), request.getSize(), ids);
+        log.info("Get users by admin (/admin/users?from={}&size={}&ids={} GET).",
+                request.getFrom(), request.getSize(), ids);
         return userService.getUsers(request, ids);
     }
 }

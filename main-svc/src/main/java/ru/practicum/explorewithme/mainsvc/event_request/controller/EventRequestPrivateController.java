@@ -19,19 +19,21 @@ public class EventRequestPrivateController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventRequestDto postRequest(@RequestParam Long eventId, @PathVariable long userId) {
-        log.info("/users/{}/requests?eventId={} POST", userId, eventId);
+        log.info("Create event request by user with id {} (/users/{}/requests?eventId={} POST).",
+                userId, userId, eventId);
         return requestService.addRequest(eventId, userId);
     }
 
     @PatchMapping("/{requestId}/cancel")
     public EventRequestDto cancelRequest(@PathVariable Long requestId, @PathVariable long userId) {
-        log.info("/users/{}/requests/{} PATCH", userId, requestId);
+        log.info("Cancel event request with id {} by user with id {} (/users/{}/requests/{} PATCH).",
+                requestId, userId, userId, requestId);
         return requestService.cancelRequest(requestId, userId);
     }
 
     @GetMapping
     public List<EventRequestDto> getRequests(@PathVariable long userId) {
-        log.info("/users/{}/requests GET", userId);
+        log.info("Get event requests by user with id {} (/users/{}/requests GET).", userId, userId);
         return requestService.getRequestsByUserId(userId);
     }
 }

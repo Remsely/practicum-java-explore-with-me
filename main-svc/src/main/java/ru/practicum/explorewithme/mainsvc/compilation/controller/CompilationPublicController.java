@@ -20,14 +20,15 @@ public class CompilationPublicController {
 
     @GetMapping("/{compId}")
     public CompilationDto getCompilationById(@PathVariable long compId) {
-        log.info("/compilations/{} GET", compId);
+        log.info("Get compilation with id {} (/compilations/{} GET).", compId, compId);
         return compilationService.getCompilationById(compId);
     }
 
     @GetMapping
     public List<CompilationDto> getCompilations(@ModelAttribute @Validated CompilationsRequest compilationsRequest,
                                                 @ModelAttribute @Validated PaginationRequest paginationRequest) {
-        log.info("/compilations GET");
+        log.info("Get compilations (/compilations?from={}&size={}&pinned={} GET).",
+                paginationRequest.getFrom(), paginationRequest.getSize(), compilationsRequest.getPinned());
         return compilationService.getCompilations(compilationsRequest, paginationRequest);
     }
 }

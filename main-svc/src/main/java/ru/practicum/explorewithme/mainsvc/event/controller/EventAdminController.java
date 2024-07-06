@@ -24,7 +24,7 @@ public class EventAdminController {
 
     @PatchMapping("/{eventId}")
     public EventFullDto patchEvent(@RequestBody @Valid EventAdminUpdateDto dto, @PathVariable long eventId) {
-        log.info("/admin/events/{} PATCH. Body : {}", eventId, dto);
+        log.info("Patch event with id {} by admin (/admin/events/{} PATCH). Body : {}", eventId, eventId, dto);
         eventValidator.validateEventAdminUpdateDto(dto);
         return eventService.updateEventByAdmin(eventId, dto);
     }
@@ -34,7 +34,8 @@ public class EventAdminController {
                                         @ModelAttribute @Validated TimeRangeRequest timeRangeRequest,
                                         @ModelAttribute @Validated EventsAdminRequest eventsAdminRequests) {
         timeRangeRequest.validate();
-        log.info("/admin/events?users={}&states={}&categories={}&rangeStart={}&rangeEnd={}&from={}&size={} GET. ",
+        log.info("Get events by admin (/admin/events?" +
+                        "users={}&states={}&categories={}&rangeStart={}&rangeEnd={}&from={}&size={} GET). ",
                 eventsAdminRequests.getUsers(), eventsAdminRequests.getStates(), eventsAdminRequests.getCategories(),
                 timeRangeRequest.getRangeStart(), timeRangeRequest.getRangeEnd(),
                 paginationRequest.getFrom(), paginationRequest.getSize()
