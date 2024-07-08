@@ -11,7 +11,10 @@ import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.event_request.mapper.EventRequestMapper;
 import ru.practicum.explorewithme.mainsvc.event_request.repository.EventRequestRepository;
-import ru.practicum.explorewithme.mainsvc.exception.*;
+import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
+import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
+import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
+import ru.practicum.explorewithme.mainsvc.exception.RequestsAlreadyCompletedException;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 import ru.practicum.explorewithme.mainsvc.user.service.UserService;
 
@@ -43,7 +46,7 @@ public class EventRequestServiceImpl implements EventRequestService {
             throw new AccessRightsException("User " + user.getId() + " is initiator of event " + event.getId());
         }
         if (!eventService.eventIsPublished(event)) {
-            throw new NotPublicException("Event " + event.getId() + " is not public.");
+            throw new AccessRightsException("Event " + event.getId() + " is not public.");
         }
         if (eventService.eventParticipantLimitIsCompleted(event)) {
             throw new RequestsAlreadyCompletedException("Event " + event.getId() + " is full.");

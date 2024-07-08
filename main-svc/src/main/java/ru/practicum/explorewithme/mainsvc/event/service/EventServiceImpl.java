@@ -141,7 +141,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getPublicEventById(long eventId) {
         Event event = this.findEventById(eventId);
 
-        if (event.getState() != EventState.PUBLISHED) {
+        if (!eventIsPublished(event)) {
             throw new NotPublicException("Event " + event.getId() + " is not public.");
         }
 
@@ -269,7 +269,7 @@ public class EventServiceImpl implements EventService {
 
         List<EventRequest> requestsToUpdate = requestRepository.findByEventAndIdIn(event, request.getRequestIds());
         requestsToUpdate.forEach(r -> {
-            if (!request.getStatus().equals(EventRequestStatus.PENDING)) {
+            if (!r.getStatus().equals(EventRequestStatus.PENDING)) {
                 throw new AccessRightsException("Event request with id = " + r.getId() + " is not pending.");
             }
             if (eventParticipantLimitIsCompleted(event)) {
@@ -316,7 +316,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public boolean eventIsPublished(Event event) {
-        return event.getState() == EventState.PUBLISHED;
+        return event.getState().equals(EventState.PUBLISHED);
     }
 
     @Override
@@ -329,7 +329,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private boolean eventIsPending(Event event) {
-        return event.getState() == EventState.PENDING;
+        return event.getState().equals(EventState.PENDING);
     }
 
     private boolean eventIsCanceledOrPending(Event event) {
@@ -397,13 +397,13 @@ public class EventServiceImpl implements EventService {
         }
         switch (updater.getStateAction()) {
             case REJECT_EVENT:
-                if (!eventIsPublished(updating)) {
-                    throw new NotPublicException("Event " + updating.getId() + " is not public.");
+                if (eventIsPublished(updating)) {
+                    throw new AccessRightsException("Event " + updating.getId() + " is not public.");
                 }
                 updating.setState(EventState.CANCELED);
                 break;
             case PUBLISH_EVENT:
-                if (eventIsPending(updating)) {
+                if (!eventIsPending(updating)) {
                     throw new AccessRightsException("Event " + updating.getId() + " is not in " +
                             EventState.PENDING + " state.");
                 }
