@@ -12,10 +12,10 @@ import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationsRequest;
 import ru.practicum.explorewithme.mainsvc.compilation.entity.Compilation;
 import ru.practicum.explorewithme.mainsvc.compilation.mapper.CompilationMapper;
 import ru.practicum.explorewithme.mainsvc.compilation.repository.CompilationRepository;
-import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationGuardService;
 import ru.practicum.explorewithme.mainsvc.compilation.util.CompilationQueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
-import ru.practicum.explorewithme.mainsvc.event.util.EventGuardService;
+import ru.practicum.explorewithme.mainsvc.event.service.EventService;
+import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 
 import java.util.List;
 import java.util.Set;
@@ -25,11 +25,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
-    private final CompilationGuardService compilationExceptionThrower;
     private final CompilationMapper compilationMapper;
     private final CompilationQueryDslUtility compilationQueryDslUtility;
-
-    private final EventGuardService eventExceptionThrower;
+    private final EventService eventService;
 
     @Transactional
     @Override
@@ -52,7 +50,9 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     @Override
     public void deleteCompilation(long compId) {
-        compilationExceptionThrower.checkExistenceById(compId);
+        if (!compilationRepository.existsById(compId)) {
+            throw new EntityNotFoundException("Compilation with id = " + compId + " not found.");
+        }
         compilationRepository.deleteById(compId);
         log.info("Compilation with id: {} has been deleted.", compId);
     }
@@ -60,7 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     @Override
     public CompilationDto updateCompilation(long compId, CompilationUpdateDto dto) {
-        Compilation compilation = compilationExceptionThrower.findById(compId);
+        Compilation compilation = this.findCompilationById(compId);
 
         updateCompilationProperties(compilation, dto);
         Compilation updatedCompilation = compilationRepository.save(compilation);
@@ -73,7 +73,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     @Override
     public CompilationDto getCompilationById(long compId) {
-        Compilation compilation = compilationExceptionThrower.findById(compId);
+        Compilation compilation = this.findCompilationById(compId);
         CompilationDto dto = compilationMapper.toDto(compilation);
         log.info("Compilation with id: {} has been found.", compId);
         return dto;
@@ -95,6 +95,14 @@ public class CompilationServiceImpl implements CompilationService {
         return dtos;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Compilation findCompilationById(Long id) {
+        return compilationRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Compilation with id = " + id + " not found.")
+        );
+    }
+
     private void updateCompilationProperties(Compilation updating, CompilationUpdateDto updater) {
         Set<Long> eventsIds = updater.getEvents();
         setNullableCompilationEvents(updating, eventsIds);
@@ -110,7 +118,7 @@ public class CompilationServiceImpl implements CompilationService {
 
     private void setNullableCompilationEvents(Compilation compilation, Set<Long> eventsIds) {
         if (eventsIds != null && !eventsIds.isEmpty()) {
-            Set<Event> events = eventExceptionThrower.findByIdIn(eventsIds);
+            Set<Event> events = eventService.findEventsByIdIn(eventsIds);
             compilation.setEvents(events);
         }
     }

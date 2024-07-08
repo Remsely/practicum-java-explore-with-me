@@ -5,15 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
-import ru.practicum.explorewithme.mainsvc.event.util.EventGuardService;
+import ru.practicum.explorewithme.mainsvc.event.service.EventService;
 import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.event_request.mapper.EventRequestMapper;
 import ru.practicum.explorewithme.mainsvc.event_request.repository.EventRequestRepository;
-import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestGuardService;
+import ru.practicum.explorewithme.mainsvc.exception.*;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
-import ru.practicum.explorewithme.mainsvc.user.util.UserGuardService;
+import ru.practicum.explorewithme.mainsvc.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,24 +22,32 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EventRequestServiceImpl implements EventRequestService {
-    private final EventRequestGuardService requestExceptionThrower;
     private final EventRequestRepository requestRepository;
     private final EventRequestMapper requestMapper;
 
-    private final EventGuardService eventExceptionThrower;
+    private final EventService eventService;
 
-    private final UserGuardService userExceptionThrower;
+    private final UserService userService;
 
     @Transactional
     @Override
     public EventRequestDto addRequest(long eventId, long userId) {
-        User user = userExceptionThrower.findById(userId);
-        Event event = eventExceptionThrower.findById(eventId);
+        User user = userService.findUserById(userId);
+        Event event = eventService.findEventById(eventId);
 
-        requestExceptionThrower.checkExistenceByUserAndEvent(user, event);
-        eventExceptionThrower.checkUserIsNotInitiator(user, event);
-        eventExceptionThrower.checkStatusIsPublished(event);
-        eventExceptionThrower.checkParticipantLimit(event);
+        if (requestExistsByUserAndEvent(user, event)) {
+            throw new AlreadyExistsException("Request already exists for event with id = " + event.getId() +
+                    " from user with id = " + user.getId() + ".");
+        }
+        if (eventService.userIsEventInitiator(user, event)) {
+            throw new AccessRightsException("User " + user.getId() + " is initiator of event " + event.getId());
+        }
+        if (!eventService.eventIsPublished(event)) {
+            throw new NotPublicException("Event " + event.getId() + " is not public.");
+        }
+        if (eventService.eventParticipantLimitIsCompleted(event)) {
+            throw new RequestsAlreadyCompletedException("Event " + event.getId() + " is full.");
+        }
 
         EventRequest request = EventRequest.builder()
                 .event(event)
@@ -59,11 +67,16 @@ public class EventRequestServiceImpl implements EventRequestService {
     @Transactional
     @Override
     public EventRequestDto cancelRequest(long requestId, long userId) {
-        User user = userExceptionThrower.findById(userId);
-        EventRequest request = requestExceptionThrower.findById(requestId);
+        User user = userService.findUserById(userId);
+        EventRequest request = this.findRequestById(requestId);
 
-        requestExceptionThrower.checkUserIsRequester(user, request);
-        requestExceptionThrower.checkStatusIsPending(request);
+        if (!userIsRequester(user, request)) {
+            throw new AccessRightsException("User with id = " + user.getId() +
+                    " is not requester of event request with id = " + request.getId() + ".");
+        }
+        if (!requestIsPending(request)) {
+            throw new AccessRightsException("Event request with id = " + request.getId() + " is not pending.");
+        }
 
         request.setStatus(EventRequestStatus.CANCELED);
         EventRequest savedRequest = requestRepository.save(request);
@@ -76,10 +89,30 @@ public class EventRequestServiceImpl implements EventRequestService {
     @Transactional(readOnly = true)
     @Override
     public List<EventRequestDto> getRequestsByUserId(long userId) {
-        User user = userExceptionThrower.findById(userId);
+        User user = userService.findUserById(userId);
         List<EventRequest> requests = requestRepository.findByRequester(user);
         List<EventRequestDto> dtos = requestMapper.toDtoList(requests);
         log.info("Requests has been found. List size : {}", dtos);
         return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EventRequest findRequestById(Long id) {
+        return requestRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Event request with id = " + id + " not found.")
+        );
+    }
+
+    private boolean requestExistsByUserAndEvent(User user, Event event) {
+        return requestRepository.existsByRequesterAndEvent(user, event);
+    }
+
+    private boolean userIsRequester(User user, EventRequest request) {
+        return request.getRequester().getId().equals(user.getId());
+    }
+
+    private boolean requestIsPending(EventRequest request) {
+        return request.getStatus().equals(EventRequestStatus.PENDING);
     }
 }

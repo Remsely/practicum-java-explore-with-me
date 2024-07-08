@@ -5,6 +5,7 @@ import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationCreationDto
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationDto;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationUpdateDto;
 import ru.practicum.explorewithme.mainsvc.compilation.dto.CompilationsRequest;
+import ru.practicum.explorewithme.mainsvc.compilation.entity.Compilation;
 
 import java.util.List;
 
@@ -18,4 +19,6 @@ public interface CompilationService {
     CompilationDto getCompilationById(long compId);
 
     List<CompilationDto> getCompilations(CompilationsRequest compilationsRequest, PaginationRequest paginationRequest);
+
+    Compilation findCompilationById(Long id);
 }

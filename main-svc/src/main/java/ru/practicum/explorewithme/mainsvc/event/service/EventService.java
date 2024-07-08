@@ -11,9 +11,12 @@ import ru.practicum.explorewithme.mainsvc.event.dto.update.EventAdminUpdateDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.update.EventRequestStatusUpdateRequestDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.update.EventRequestStatusUpdateResultDto;
 import ru.practicum.explorewithme.mainsvc.event.dto.update.EventUserUpdateDto;
+import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
+import ru.practicum.explorewithme.mainsvc.user.entity.User;
 
 import java.util.List;
+import java.util.Set;
 
 public interface EventService {
     EventFullDto addEvent(EventCreationDto dto, long userId);
@@ -38,5 +41,16 @@ public interface EventService {
 
     List<EventRequestDto> getEventRequestsByUser(long eventId, long userId);
 
-    EventRequestStatusUpdateResultDto updateEventRequestsByUser(long eventId, EventRequestStatusUpdateRequestDto request, long userId);
+    EventRequestStatusUpdateResultDto updateEventRequestsByUser(
+            long eventId, EventRequestStatusUpdateRequestDto request, long userId);
+
+    Event findEventById(Long id);
+
+    Set<Event> findEventsByIdIn(Set<Long> ids);
+
+    boolean eventParticipantLimitIsCompleted(Event event);
+
+    boolean eventIsPublished(Event event);
+
+    boolean userIsEventInitiator(User user, Event event);
 }

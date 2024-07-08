@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
-import ru.practicum.explorewithme.mainsvc.category.util.CategoryGuardService;
+import ru.practicum.explorewithme.mainsvc.category.service.CategoryService;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
@@ -21,24 +21,27 @@ import ru.practicum.explorewithme.mainsvc.event.entity.Event;
 import ru.practicum.explorewithme.mainsvc.event.entity.EventState;
 import ru.practicum.explorewithme.mainsvc.event.mapper.EventMapper;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
-import ru.practicum.explorewithme.mainsvc.event.util.EventGuardService;
 import ru.practicum.explorewithme.mainsvc.event.util.EventQueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event_request.dto.EventRequestDto;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequest;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.event_request.mapper.EventRequestMapper;
 import ru.practicum.explorewithme.mainsvc.event_request.repository.EventRequestRepository;
-import ru.practicum.explorewithme.mainsvc.event_request.util.EventRequestGuardService;
+import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
+import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
+import ru.practicum.explorewithme.mainsvc.exception.NotPublicException;
+import ru.practicum.explorewithme.mainsvc.exception.RequestsAlreadyCompletedException;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 import ru.practicum.explorewithme.mainsvc.location.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.location.service.LocationService;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
-import ru.practicum.explorewithme.mainsvc.user.util.UserGuardService;
+import ru.practicum.explorewithme.mainsvc.user.service.UserService;
 import ru.practicum.explorewithme.statsvc.common.dto.StatDto;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,19 +50,17 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
-    private final EventGuardService eventExceptionThrower;
     private final EventQueryDslUtility eventQueryDslUtility;
 
     private final EventRequestMapper requestMapper;
     private final EventRequestRepository requestRepository;
-    private final EventRequestGuardService requestExceptionThrower;
 
     private final LocationService locationService;
     private final LocationMapper locationMapper;
 
-    private final CategoryGuardService categoryExceptionChecker;
+    private final CategoryService categoryService;
 
-    private final UserGuardService userExceptionThrower;
+    private final UserService userService;
 
     private final PageableUtility pageableUtility;
 
@@ -68,8 +69,8 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventFullDto addEvent(EventCreationDto dto, long userId) {
-        User user = userExceptionThrower.findById(userId);
-        Category category = categoryExceptionChecker.findById(dto.getCategory());
+        User user = userService.findUserById(userId);
+        Category category = categoryService.findCategoryById(dto.getCategory());
         Event event = eventMapper.toEntity(dto);
 
         event.setInitiator(user);
@@ -89,11 +90,17 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventFullDto updateEventByUser(long eventId, EventUserUpdateDto dto, long userId) {
-        Event event = eventExceptionThrower.findById(eventId);
-        User user = userExceptionThrower.findById(userId);
+        Event event = this.findEventById(eventId);
+        User user = userService.findUserById(userId);
 
-        eventExceptionThrower.checkUserIsInitiator(user, event);
-        eventExceptionThrower.checkStatusIsCanceledOrPending(event);
+        if (!userIsEventInitiator(user, event)) {
+            throw new AccessRightsException("User with id = " + user.getId() +
+                    " is not initiator of the event with id = " + event.getId() + ".");
+        }
+        if (!eventIsCanceledOrPending(event)) {
+            throw new AccessRightsException("Event " + event.getId() + " is not in " + EventState.PENDING +
+                    " or " + EventState.CANCELED + " state.");
+        }
 
         updateEventProperties(event, dto);
         updateEventStateByUser(event, dto);
@@ -104,7 +111,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventFullDto updateEventByAdmin(long eventId, EventAdminUpdateDto dto) {
-        Event event = eventExceptionThrower.findById(eventId);
+        Event event = this.findEventById(eventId);
         updateEventStateByAdmin(event, dto);
         updateEventProperties(event, dto);
         return updateEventInDB(event);
@@ -113,10 +120,13 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public EventFullDto getUserEventById(long eventId, long userId) {
-        User user = userExceptionThrower.findById(userId);
-        Event event = eventExceptionThrower.findById(eventId);
+        User user = userService.findUserById(userId);
+        Event event = this.findEventById(eventId);
 
-        eventExceptionThrower.checkUserIsInitiator(user, event);
+        if (!userIsEventInitiator(user, event)) {
+            throw new AccessRightsException("User with id = " + user.getId() +
+                    " is not initiator of the event with id = " + event.getId() + ".");
+        }
 
         int confirmedRequests = requestRepository.countByEventAndStatus(event, EventRequestStatus.CONFIRMED);
         long views = event.getState().equals(EventState.PUBLISHED) ? getEventViews(event) : 0;
@@ -129,8 +139,11 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public EventFullDto getPublicEventById(long eventId) {
-        Event event = eventExceptionThrower.findById(eventId);
-        eventExceptionThrower.checkEventIsPublic(event);
+        Event event = this.findEventById(eventId);
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new NotPublicException("Event " + event.getId() + " is not public.");
+        }
 
         int confirmedRequests = requestRepository.countByEventAndStatus(event, EventRequestStatus.CONFIRMED);
         long views = getEventViews(event);
@@ -143,7 +156,7 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public List<EventShortDto> getEventsByUser(long userId, PaginationRequest paginationRequest) {
-        userExceptionThrower.checkExistenceById(userId);
+        userService.findUserById(userId);
 
         List<Event> events = eventRepository.findByInitiatorId(userId, pageableUtility.toPageable(paginationRequest));
         List<EventRequest> requests = requestRepository.findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
@@ -228,10 +241,13 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public List<EventRequestDto> getEventRequestsByUser(long eventId, long userId) {
-        User user = userExceptionThrower.findById(userId);
-        Event event = eventExceptionThrower.findById(eventId);
+        User user = userService.findUserById(userId);
+        Event event = this.findEventById(eventId);
 
-        eventExceptionThrower.checkUserIsInitiator(user, event);
+        if (!userIsEventInitiator(user, event)) {
+            throw new AccessRightsException("User with id = " + user.getId() +
+                    " is not initiator of the event with id = " + event.getId() + ".");
+        }
 
         List<EventRequest> requests = requestRepository.findByEvent(event);
         List<EventRequestDto> dtos = requestMapper.toDtoList(requests);
@@ -243,15 +259,22 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventRequestStatusUpdateResultDto updateEventRequestsByUser(
             long eventId, EventRequestStatusUpdateRequestDto request, long userId) {
-        User user = userExceptionThrower.findById(userId);
-        Event event = eventExceptionThrower.findById(eventId);
+        User user = userService.findUserById(userId);
+        Event event = this.findEventById(eventId);
 
-        eventExceptionThrower.checkUserIsInitiator(user, event);
+        if (!userIsEventInitiator(user, event)) {
+            throw new AccessRightsException("User with id = " + user.getId() +
+                    " is not initiator of the event with id = " + event.getId() + ".");
+        }
 
         List<EventRequest> requestsToUpdate = requestRepository.findByEventAndIdIn(event, request.getRequestIds());
         requestsToUpdate.forEach(r -> {
-            requestExceptionThrower.checkStatusIsPending(r);
-            eventExceptionThrower.checkParticipantLimit(event);
+            if (!request.getStatus().equals(EventRequestStatus.PENDING)) {
+                throw new AccessRightsException("Event request with id = " + r.getId() + " is not pending.");
+            }
+            if (eventParticipantLimitIsCompleted(event)) {
+                throw new RequestsAlreadyCompletedException("Event " + event.getId() + " is full.");
+            }
             r.setStatus(request.getStatus());
         });
         requestRepository.saveAll(requestsToUpdate);
@@ -266,6 +289,51 @@ public class EventServiceImpl implements EventService {
         log.info("Requests statuses has been updated. Confirmed requests size: {}, rejected requests size: {}",
                 result.getConfirmedRequests().size(), result.getRejectedRequests().size());
         return result;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Event findEventById(Long id) {
+        return eventRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Event with id = " + id + " not found.")
+        );
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Set<Event> findEventsByIdIn(Set<Long> ids) {
+        Set<Event> events = eventRepository.findByIdIn(ids);
+        if (events.size() != ids.size()) {
+            throw new EntityNotFoundException("No all events with ids = " + ids + " found.");
+        }
+        return events;
+    }
+
+    @Override
+    public boolean userIsEventInitiator(User user, Event event) {
+        return user.getId().equals(event.getInitiator().getId());
+    }
+
+    @Override
+    public boolean eventIsPublished(Event event) {
+        return event.getState() == EventState.PUBLISHED;
+    }
+
+    @Override
+    public boolean eventParticipantLimitIsCompleted(Event event) {
+        if (event.getParticipantLimit() == 0) {
+            return false;
+        }
+        int confirmedRequestsCont = requestRepository.countByEventAndStatus(event, EventRequestStatus.CONFIRMED);
+        return event.getParticipantLimit() <= confirmedRequestsCont;
+    }
+
+    private boolean eventIsPending(Event event) {
+        return event.getState() == EventState.PENDING;
+    }
+
+    private boolean eventIsCanceledOrPending(Event event) {
+        return event.getState() == EventState.CANCELED || event.getState() == EventState.PENDING;
     }
 
     private EventFullDto updateEventInDB(Event event) {
@@ -329,11 +397,16 @@ public class EventServiceImpl implements EventService {
         }
         switch (updater.getStateAction()) {
             case REJECT_EVENT:
-                eventExceptionThrower.checkStatusIsNotPublished(updating);
+                if (!eventIsPublished(updating)) {
+                    throw new NotPublicException("Event " + updating.getId() + " is not public.");
+                }
                 updating.setState(EventState.CANCELED);
                 break;
             case PUBLISH_EVENT:
-                eventExceptionThrower.checkStatusIsPending(updating);
+                if (eventIsPending(updating)) {
+                    throw new AccessRightsException("Event " + updating.getId() + " is not in " +
+                            EventState.PENDING + " state.");
+                }
                 updating.setState(EventState.PUBLISHED);
                 updating.setPublishedOn(LocalDateTime.now());
                 break;
@@ -343,7 +416,7 @@ public class EventServiceImpl implements EventService {
     private void updateCategory(Event updating, EventUpdateDto updater) {
         Long categoryId = updater.getCategory();
         if (categoryId != null && !categoryId.equals(updating.getCategory().getId())) {
-            Category category = categoryExceptionChecker.findById(categoryId);
+            Category category = categoryService.findCategoryById(categoryId);
             updating.setCategory(category);
         }
     }

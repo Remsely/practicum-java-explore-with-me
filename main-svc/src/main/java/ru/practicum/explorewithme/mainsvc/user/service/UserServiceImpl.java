@@ -7,11 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
+import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
+import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.user.dto.UserDto;
 import ru.practicum.explorewithme.mainsvc.user.entity.User;
 import ru.practicum.explorewithme.mainsvc.user.mapper.UserMapper;
 import ru.practicum.explorewithme.mainsvc.user.repository.UserRepository;
-import ru.practicum.explorewithme.mainsvc.user.util.UserGuardService;
 
 import java.util.List;
 
@@ -20,14 +21,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
-    private final UserGuardService userExceptionThrower;
     private final UserRepository userRepository;
     private final PageableUtility pageableUtility;
 
     @Transactional
     @Override
     public UserDto addUser(UserDto userDto) {
-        userExceptionThrower.checkEmailUniqueness(userDto.getEmail());
+        String email = userDto.getEmail();
+        if (userRepository.existsByEmail(email)) {
+            throw new AlreadyExistsException("User with email = " + email + " already exists.");
+        }
 
         User user = userMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
@@ -40,7 +43,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void deleteUser(Long userId) {
-        userExceptionThrower.checkExistenceById(userId);
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User with id = " + userId + " not found.");
+        }
         userRepository.deleteById(userId);
         log.info("User with id = {} has been deleted.", userId);
     }
@@ -59,5 +64,13 @@ public class UserServiceImpl implements UserService {
         List<UserDto> dtos = userMapper.toDtoList(users);
         log.info("Users have been found. List size : {}", dtos.size());
         return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public User findUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("User with id = " + id + " not found.")
+        );
     }
 }
