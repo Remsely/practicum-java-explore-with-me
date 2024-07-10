@@ -4,10 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explorewithme.mainsvc.event.entity.Event;
+import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
-import ru.practicum.explorewithme.mainsvc.location.entity.LocationPrimaryKey;
 import ru.practicum.explorewithme.mainsvc.location.repository.LocationRepository;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -15,38 +16,31 @@ import ru.practicum.explorewithme.mainsvc.location.repository.LocationRepository
 public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
 
-    @Transactional(readOnly = true)
-    @Override
-    public boolean isLocationExists(Location location) {
-        return locationRepository.existsById(LocationPrimaryKey.builder()
-                .lat(location.getLat())
-                .lon(location.getLon())
-                .build()
-        );
-    }
-
     @Transactional
     @Override
     public Location putLocation(Location location) {
-        if (!isLocationExists(location)) {
+        if (location.getId() == null) {
+            Optional<Location> existsLocation = locationRepository.getByLatAndLonAndRadiusAndNameAndVerified(
+                    location.getLat(), location.getLon(), location.getRadius(), location.getName(), true
+            );
+            if (existsLocation.isPresent()) {
+                log.info("Location already exists : {}", existsLocation.get());
+                return existsLocation.get();
+            }
+            location.setVerified(false);
             Location savedLocation = locationRepository.save(location);
             log.info("Location has been saved : {}", savedLocation);
             return savedLocation;
         }
-        return location;
+        Location existsLocation = findLocationById(location.getId());
+        log.info("Location already exists : {}", existsLocation);
+        return existsLocation;
     }
 
-    @Transactional
     @Override
-    public boolean deleteEventLocation(Location location, Event event) {
-        if (locationRepository.existsInEventsExclude(location, event.getId())) {
-            return false;
-        }
-        locationRepository.deleteById(LocationPrimaryKey.builder()
-                .lat(location.getLat())
-                .lon(location.getLon())
-                .build()
+    public Location findLocationById(long id) {
+        return locationRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Location with id " + id + " not found.")
         );
-        return true;
     }
 }

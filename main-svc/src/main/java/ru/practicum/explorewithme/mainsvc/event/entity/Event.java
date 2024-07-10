@@ -43,10 +43,7 @@ public class Event {
     private User initiator;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name = "lat", referencedColumnName = "lat", nullable = false),
-            @JoinColumn(name = "lon", referencedColumnName = "lon", nullable = false)
-    })
+    @JoinColumn(nullable = false)
     private Location location;
 
     @Column(nullable = false)

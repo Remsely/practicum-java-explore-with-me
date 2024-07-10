@@ -31,6 +31,7 @@ import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.NotPublicException;
 import ru.practicum.explorewithme.mainsvc.exception.RequestsAlreadyCompletedException;
+import ru.practicum.explorewithme.mainsvc.location.dto.LocationDto;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 import ru.practicum.explorewithme.mainsvc.location.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.location.service.LocationService;
@@ -422,11 +423,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private void updateLocation(Event updating, EventUpdateDto updater) {
-        Location newLocation = locationMapper.toEntity(updater.getLocation());
-        if (newLocation != null) {
-            Location prevLocation = updating.getLocation();
+        LocationDto locationDto = updater.getLocation();
+        if (locationDto != null) {
+            Location newLocation = locationMapper.toEntity(updater.getLocation());
             updating.setLocation(locationService.putLocation(newLocation));
-            locationService.deleteEventLocation(prevLocation, updating);
         }
     }
 

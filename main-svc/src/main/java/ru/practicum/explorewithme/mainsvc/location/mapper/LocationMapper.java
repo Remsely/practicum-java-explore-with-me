@@ -10,6 +10,8 @@ public class LocationMapper {
         return LocationDto.builder()
                 .lat(location.getLat())
                 .lon(location.getLon())
+                .radius(location.getRadius())
+                .name(location.getName())
                 .build();
     }
 
@@ -17,6 +19,9 @@ public class LocationMapper {
         return locationDto == null ? null : Location.builder()
                 .lat(locationDto.getLat())
                 .lon(locationDto.getLon())
+                .radius(locationDto.getRadius())
+                .name(locationDto.getName())
+                .verified(locationDto.getVerified())
                 .build();
     }
 }
