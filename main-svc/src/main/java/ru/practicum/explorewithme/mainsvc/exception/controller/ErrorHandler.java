@@ -82,7 +82,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponseDto handleAccessRights(AccessRightsException e) {
         ErrorResponseDto response = ErrorResponseDto.builder()
-                .status(HttpStatus.BAD_REQUEST.toString())
+                .status(HttpStatus.CONFLICT.toString())
                 .reason("Access denied.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
@@ -95,7 +95,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponseDto handleRequestsAlreadyCompleted(RequestsAlreadyCompletedException e) {
         ErrorResponseDto response = ErrorResponseDto.builder()
-                .status(HttpStatus.BAD_REQUEST.toString())
+                .status(HttpStatus.CONFLICT.toString())
                 .reason("Request already completed.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())

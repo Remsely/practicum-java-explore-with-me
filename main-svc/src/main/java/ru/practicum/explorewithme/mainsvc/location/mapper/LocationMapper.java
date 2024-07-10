@@ -8,10 +8,12 @@ import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 public class LocationMapper {
     public LocationDto toDto(Location location) {
         return LocationDto.builder()
+                .id(location.getId())
                 .lat(location.getLat())
                 .lon(location.getLon())
                 .radius(location.getRadius())
                 .name(location.getName())
+                .verified(location.getVerified())
                 .build();
     }
 
@@ -21,7 +23,6 @@ public class LocationMapper {
                 .lon(locationDto.getLon())
                 .radius(locationDto.getRadius())
                 .name(locationDto.getName())
-                .verified(locationDto.getVerified())
                 .build();
     }
 }
