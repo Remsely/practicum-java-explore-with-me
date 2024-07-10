@@ -57,7 +57,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public CategoryDto patchCategory(Long catId, CategoryDto categoryDto) {
-        Category category = this.findCategoryById(catId);
+        Category category = findCategoryById(catId);
 
         String name = categoryDto.getName();
         if (!name.equals(category.getName())) {
@@ -77,7 +77,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     @Override
     public CategoryDto getCategoryById(Long catId) {
-        Category category = this.findCategoryById(catId);
+        Category category = findCategoryById(catId);
         CategoryDto dto = categoryMapper.toDto(category);
         log.info("Category with id = {} has been found. Category : {}", catId, dto);
         return dto;

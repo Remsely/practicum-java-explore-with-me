@@ -60,7 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     @Override
     public CompilationDto updateCompilation(long compId, CompilationUpdateDto dto) {
-        Compilation compilation = this.findCompilationById(compId);
+        Compilation compilation = findCompilationById(compId);
 
         updateCompilationProperties(compilation, dto);
         Compilation updatedCompilation = compilationRepository.save(compilation);
@@ -73,7 +73,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     @Override
     public CompilationDto getCompilationById(long compId) {
-        Compilation compilation = this.findCompilationById(compId);
+        Compilation compilation = findCompilationById(compId);
         CompilationDto dto = compilationMapper.toDto(compilation);
         log.info("Compilation with id: {} has been found.", compId);
         return dto;

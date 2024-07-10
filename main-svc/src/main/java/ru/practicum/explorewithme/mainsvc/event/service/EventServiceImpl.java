@@ -90,7 +90,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventFullDto updateEventByUser(long eventId, EventUserUpdateDto dto, long userId) {
-        Event event = this.findEventById(eventId);
+        Event event = findEventById(eventId);
         User user = userService.findUserById(userId);
 
         if (!userIsEventInitiator(user, event)) {
@@ -111,7 +111,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventFullDto updateEventByAdmin(long eventId, EventAdminUpdateDto dto) {
-        Event event = this.findEventById(eventId);
+        Event event = findEventById(eventId);
         updateEventStateByAdmin(event, dto);
         updateEventProperties(event, dto);
         return updateEventInDB(event);
@@ -121,7 +121,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getUserEventById(long eventId, long userId) {
         User user = userService.findUserById(userId);
-        Event event = this.findEventById(eventId);
+        Event event = findEventById(eventId);
 
         if (!userIsEventInitiator(user, event)) {
             throw new AccessRightsException("User with id = " + user.getId() +
@@ -139,7 +139,7 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public EventFullDto getPublicEventById(long eventId) {
-        Event event = this.findEventById(eventId);
+        Event event = findEventById(eventId);
 
         if (!eventIsPublished(event)) {
             throw new NotPublicException("Event " + event.getId() + " is not public.");
@@ -242,7 +242,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventRequestDto> getEventRequestsByUser(long eventId, long userId) {
         User user = userService.findUserById(userId);
-        Event event = this.findEventById(eventId);
+        Event event = findEventById(eventId);
 
         if (!userIsEventInitiator(user, event)) {
             throw new AccessRightsException("User with id = " + user.getId() +
@@ -260,7 +260,7 @@ public class EventServiceImpl implements EventService {
     public EventRequestStatusUpdateResultDto updateEventRequestsByUser(
             long eventId, EventRequestStatusUpdateRequestDto request, long userId) {
         User user = userService.findUserById(userId);
-        Event event = this.findEventById(eventId);
+        Event event = findEventById(eventId);
 
         if (!userIsEventInitiator(user, event)) {
             throw new AccessRightsException("User with id = " + user.getId() +

@@ -71,7 +71,7 @@ public class EventRequestServiceImpl implements EventRequestService {
     @Override
     public EventRequestDto cancelRequest(long requestId, long userId) {
         User user = userService.findUserById(userId);
-        EventRequest request = this.findRequestById(requestId);
+        EventRequest request = findRequestById(requestId);
 
         if (!userIsRequester(user, request)) {
             throw new AccessRightsException("User with id = " + user.getId() +
