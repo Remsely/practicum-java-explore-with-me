@@ -1,10 +1,12 @@
 package ru.practicum.explorewithme.mainsvc.event.util;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Component;
 import ru.practicum.explorewithme.mainsvc.category.entity.QCategory;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.querydsl.QueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
@@ -110,5 +112,23 @@ public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
 
     public void addOrderByEventDate(JPAQuery<Event> query) {
         query.orderBy(qEntity.eventDate.desc());
+    }
+
+    public void addLocationFilter(JPAQuery<Event> query, LocationRadiusRequest locationRequest) {
+        Double lat = locationRequest.getLat();
+        Double lon = locationRequest.getLon();
+        Double radius = locationRequest.getRadius();
+
+        if (lat != null && lon != null) {
+            if (radius == null) {
+                radius = 3.0;
+            }
+            query.where(
+                    Expressions.booleanTemplate(
+                            "distance({0}, {1}, {2}, {3}) <= {4}",
+                            lat, lon, qEntity.location.lat, qEntity.location.lon, radius
+                    )
+            );
+        }
     }
 }

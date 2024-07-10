@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.mainsvc.event.service;
 
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.event.dto.creation.EventCreationDto;
@@ -37,7 +38,8 @@ public interface EventService {
 
     List<EventShortDto> getPublicEvents(PaginationRequest paginationRequest,
                                         TimeRangeRequest timeRangeRequest,
-                                        EventsPublicRequest eventsPublicRequest);
+                                        EventsPublicRequest eventsPublicRequest,
+                                        LocationRadiusRequest locationRequest);
 
     List<EventRequestDto> getEventRequestsByUser(long eventId, long userId);
 

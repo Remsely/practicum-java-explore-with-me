@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
@@ -35,16 +36,21 @@ public class EventPublicController {
     public List<EventShortDto> getPublicEvents(@ModelAttribute @Validated PaginationRequest paginationRequest,
                                                @ModelAttribute @Validated TimeRangeRequest timeRangeRequest,
                                                @ModelAttribute @Validated EventsPublicRequest eventsPublicRequest,
+                                               @ModelAttribute @Validated LocationRadiusRequest locationRadiusRequest,
                                                HttpServletRequest httpServletRequest) {
         timeRangeRequest.validate();
+        locationRadiusRequest.validate();
+
         log.info("Get public events (/events?text={}&categories={}&paid={}&onlyAvailable={}&sort={}" +
-                        "&rangeStart={}&rangeEnd={}&from={}&size={} GET).",
+                        "&rangeStart={}&rangeEnd={}&from={}&size={}&lat={}&lon={}&radius={} GET).",
                 eventsPublicRequest.getText(), eventsPublicRequest.getCategories(), eventsPublicRequest.getPaid(),
                 eventsPublicRequest.getOnlyAvailable(), eventsPublicRequest.getSort(),
                 timeRangeRequest.getRangeStart(), timeRangeRequest.getRangeEnd(),
-                paginationRequest.getFrom(), paginationRequest.getSize()
+                paginationRequest.getFrom(), paginationRequest.getSize(),
+                locationRadiusRequest.getLat(), locationRadiusRequest.getLon(), locationRadiusRequest.getRadius()
         );
-        List<EventShortDto> events = eventService.getPublicEvents(paginationRequest, timeRangeRequest, eventsPublicRequest);
+        List<EventShortDto> events = eventService.getPublicEvents(
+                paginationRequest, timeRangeRequest, eventsPublicRequest, locationRadiusRequest);
         statClientService.sendStat(httpServletRequest);
         return events;
     }

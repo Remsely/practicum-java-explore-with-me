@@ -44,6 +44,9 @@ public class LocationServiceImpl implements LocationService {
         }
         Location location = locationMapper.toEntity(locationDto);
 
+        if (location.getRadius() == null) {
+            location.setRadius(0.01);
+        }
         location.setVerified(true);
         Location savedLocation = locationRepository.save(location);
 

@@ -43,6 +43,9 @@ spring:
   config:
     activate:
       on-profile: test
+  sql:
+    init:
+      mode: never
 
 stat-svc:
   server:

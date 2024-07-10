@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.service.CategoryService;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
@@ -194,7 +195,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getPublicEvents(PaginationRequest paginationRequest,
                                                TimeRangeRequest timeRangeRequest,
-                                               EventsPublicRequest eventsPublicRequest) {
+                                               EventsPublicRequest eventsPublicRequest,
+                                               LocationRadiusRequest locationRequest) {
         JPAQuery<Event> query = eventQueryDslUtility.getQuery();
 
         eventQueryDslUtility.addPublishedFilter(query);
@@ -224,9 +226,11 @@ public class EventServiceImpl implements EventService {
             }
         }
 
+        eventQueryDslUtility.addLocationFilter(query, locationRequest);
         eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
         List<Event> events = eventQueryDslUtility.getQueryResultWithFetchJoins(query);
+        log.info("List size : {}", events.size());
         List<EventRequest> confirmedRequests = requestRepository
                 .findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);
