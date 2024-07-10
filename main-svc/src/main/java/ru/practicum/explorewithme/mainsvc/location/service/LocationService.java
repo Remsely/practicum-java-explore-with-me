@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.mainsvc.location.service;
 
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.location.dto.LocationDto;
 import ru.practicum.explorewithme.mainsvc.location.dto.LocationUpdateDto;
@@ -20,7 +21,9 @@ public interface LocationService {
 
     List<LocationDto> getLocationsByAdmin(LocationsAdminRequest locationsRequest, PaginationRequest paginationRequest);
 
-    List<LocationDto> getPublicLocations(LocationsPublicRequest locationsRequest, PaginationRequest paginationRequest);
+    List<LocationDto> getPublicLocations(LocationsPublicRequest locationsRequest,
+                                         LocationRadiusRequest locationRadiusRequest,
+                                         PaginationRequest paginationRequest);
 
     Location putLocation(Location location);
 

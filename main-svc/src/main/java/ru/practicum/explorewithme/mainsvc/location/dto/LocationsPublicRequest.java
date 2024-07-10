@@ -9,5 +9,4 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 public class LocationsPublicRequest {
     private String text;
-    private Double radius;
 }

@@ -2,9 +2,12 @@ package ru.practicum.explorewithme.mainsvc.location.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
+import ru.practicum.explorewithme.mainsvc.common.utils.pageable.PageableUtility;
 import ru.practicum.explorewithme.mainsvc.event.repository.EventRepository;
 import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
 import ru.practicum.explorewithme.mainsvc.exception.AlreadyExistsException;
@@ -16,6 +19,7 @@ import ru.practicum.explorewithme.mainsvc.location.dto.LocationsPublicRequest;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 import ru.practicum.explorewithme.mainsvc.location.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.location.repository.LocationRepository;
+import ru.practicum.explorewithme.mainsvc.location.util.LocationQueryDslUtility;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +30,9 @@ import java.util.Optional;
 public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
     private final LocationMapper locationMapper;
+    private final LocationQueryDslUtility queryDslUtility;
     private final EventRepository eventRepository;
+    private final PageableUtility pageableUtility;
 
     @Transactional
     @Override
@@ -85,14 +91,37 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public List<LocationDto> getLocationsByAdmin(LocationsAdminRequest locationsRequest,
                                                  PaginationRequest paginationRequest) {
-        return List.of();
+        Pageable pageable = pageableUtility.toPageable(paginationRequest);
+
+        List<Location> locations;
+        if (Boolean.TRUE.equals(locationsRequest.getVerified())) {
+            locations = locationRepository.findByVerified(true, pageable);
+        } else {
+            locations = locationRepository.findByVerified(false, pageable);
+        }
+
+        List<LocationDto> dtos = locationMapper.toDtoList(locations);
+        log.info("Locations has been found. List size : {}.", dtos.size());
+        return dtos;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<LocationDto> getPublicLocations(LocationsPublicRequest locationsRequest,
+                                                LocationRadiusRequest locationRadiusRequest,
                                                 PaginationRequest paginationRequest) {
-        return List.of();
+        var query = queryDslUtility.getQuery();
+
+        queryDslUtility.addVerifiedFilter(query, true);
+        queryDslUtility.addTextSearchFilter(query, locationsRequest.getText());
+        queryDslUtility.addLocationFilter(query, locationRadiusRequest);
+
+        queryDslUtility.addPaginationFilter(query, paginationRequest);
+
+        List<Location> locations = queryDslUtility.getQueryResultWithFetchJoins(query);
+        List<LocationDto> dtos = locationMapper.toDtoList(locations);
+        log.info("Public locations has been found. List size : {}.", dtos.size());
+        return dtos;
     }
 
     @Transactional

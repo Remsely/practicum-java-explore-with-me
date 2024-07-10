@@ -15,10 +15,23 @@ import java.time.LocalDateTime;
 public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponseDto handleDateValidationException(DateTimeValidationException e) {
+    public ErrorResponseDto handleDateValidation(DateTimeValidationException e) {
         ErrorResponseDto response = ErrorResponseDto.builder()
                 .status(HttpStatus.BAD_REQUEST.toString())
                 .reason("Date time validation error.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+        logMessage(response);
+        return response;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseDto handleLocationValidation(LocationValidationException e) {
+        ErrorResponseDto response = ErrorResponseDto.builder()
+                .status(HttpStatus.BAD_REQUEST.toString())
+                .reason("Location validation error.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();

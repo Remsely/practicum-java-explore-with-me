@@ -26,6 +26,7 @@ public class Location {
 
     private Double radius;
 
+    @Column(length = 120)
     private String name;
 
     @Column(nullable = false)

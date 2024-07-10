@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.mainsvc.location.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
@@ -18,4 +19,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     boolean existsAllByIdIn(List<Long> ids);
 
     void deleteAllByIdIn(List<Long> ids);
+
+    List<Location> findByVerified(Boolean verified, Pageable pageable);
 }
