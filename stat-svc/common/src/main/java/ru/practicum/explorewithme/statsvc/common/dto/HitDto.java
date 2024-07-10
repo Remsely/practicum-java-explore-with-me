@@ -10,15 +10,15 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class HitDto {
-    @NotBlank(message = "Идентификатор сервиса не должен быть пустым.")
+    @NotBlank(message = "App name must not be blank.")
     private String app;
 
-    @NotBlank(message = "URI не должен быть пустым.")
+    @NotBlank(message = "URI must not be blank.")
     private String uri;
 
-    @NotBlank(message = "IP-адрес пользователя не должен быть пустым.")
+    @NotBlank(message = "IP-address must not be blank.")
     private String ip;
 
-    @NotNull(message = "Дата и время не должны быть пустыми.")
+    @NotNull(message = "Date and time must not be null.")
     private LocalDateTime timestamp;
 }

@@ -31,6 +31,7 @@ public class StatController {
     public List<StatDto> getStats(@ModelAttribute @Validated StatsRequest request) {
         log.info("/stats?start={}&end={}&unique={}&uris={} GET.",
                 request.getStart(), request.getEnd(), request.getUnique(), request.getUris());
+        request.validate();
         return statService.getStats(request);
     }
 }
