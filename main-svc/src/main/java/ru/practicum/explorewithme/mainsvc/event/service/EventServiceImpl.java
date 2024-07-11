@@ -230,7 +230,6 @@ public class EventServiceImpl implements EventService {
         eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
 
         List<Event> events = eventQueryDslUtility.getQueryResultWithFetchJoins(query);
-        log.info("List size : {}", events.size());
         List<EventRequest> confirmedRequests = requestRepository
                 .findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);
