@@ -28,6 +28,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class LocationServiceImpl implements LocationService {
+    private static final double DEFAULT_RADIUS = 0.01; // default value for location radius (km)
+
     private final LocationRepository locationRepository;
     private final LocationMapper locationMapper;
     private final LocationQueryDslUtility queryDslUtility;
@@ -45,7 +47,7 @@ public class LocationServiceImpl implements LocationService {
         Location location = locationMapper.toEntity(locationDto);
 
         if (location.getRadius() == null) {
-            location.setRadius(0.01);
+            location.setRadius(DEFAULT_RADIUS);
         }
         location.setVerified(true);
         Location savedLocation = locationRepository.save(location);
@@ -96,12 +98,8 @@ public class LocationServiceImpl implements LocationService {
                                                  PaginationRequest paginationRequest) {
         Pageable pageable = pageableUtility.toPageable(paginationRequest);
 
-        List<Location> locations;
-        if (Boolean.TRUE.equals(locationsRequest.getVerified())) {
-            locations = locationRepository.findByVerified(true, pageable);
-        } else {
-            locations = locationRepository.findByVerified(false, pageable);
-        }
+        Boolean verified = locationsRequest.getVerified();
+        List<Location> locations = locationRepository.findByVerified(verified != null && verified, pageable);
 
         List<LocationDto> dtos = locationMapper.toDtoList(locations);
         log.info("Locations has been found. List size : {}.", dtos.size());
@@ -117,11 +115,10 @@ public class LocationServiceImpl implements LocationService {
 
         queryDslUtility.addVerifiedFilter(query, true);
         queryDslUtility.addTextSearchFilter(query, locationsRequest.getText());
-        queryDslUtility.addLocationFilter(query, locationRadiusRequest);
 
-        queryDslUtility.addPaginationFilter(query, paginationRequest);
+        List<Location> locations = queryDslUtility
+                .getQueryResultWithLocationAndPaginationFilters(query, locationRadiusRequest, paginationRequest);
 
-        List<Location> locations = queryDslUtility.getQueryResultWithFetchJoins(query);
         List<LocationDto> dtos = locationMapper.toDtoList(locations);
         log.info("Public locations has been found. List size : {}.", dtos.size());
         return dtos;

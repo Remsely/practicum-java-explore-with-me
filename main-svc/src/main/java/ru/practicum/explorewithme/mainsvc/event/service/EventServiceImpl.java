@@ -226,10 +226,9 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        eventQueryDslUtility.addLocationFilter(query, locationRequest);
-        eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
+        List<Event> events = eventQueryDslUtility
+                .getQueryResultWithLocationAndPaginationFilters(query, locationRequest, paginationRequest);
 
-        List<Event> events = eventQueryDslUtility.getQueryResultWithFetchJoins(query);
         List<EventRequest> confirmedRequests = requestRepository
                 .findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);
