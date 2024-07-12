@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.mainsvc.category.entity.Category;
 import ru.practicum.explorewithme.mainsvc.category.service.CategoryService;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.stat.client.StatClientService;
@@ -31,6 +32,7 @@ import ru.practicum.explorewithme.mainsvc.exception.AccessRightsException;
 import ru.practicum.explorewithme.mainsvc.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.mainsvc.exception.NotPublicException;
 import ru.practicum.explorewithme.mainsvc.exception.RequestsAlreadyCompletedException;
+import ru.practicum.explorewithme.mainsvc.location.dto.LocationDto;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 import ru.practicum.explorewithme.mainsvc.location.mapper.LocationMapper;
 import ru.practicum.explorewithme.mainsvc.location.service.LocationService;
@@ -193,7 +195,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getPublicEvents(PaginationRequest paginationRequest,
                                                TimeRangeRequest timeRangeRequest,
-                                               EventsPublicRequest eventsPublicRequest) {
+                                               EventsPublicRequest eventsPublicRequest,
+                                               LocationRadiusRequest locationRequest) {
         JPAQuery<Event> query = eventQueryDslUtility.getQuery();
 
         eventQueryDslUtility.addPublishedFilter(query);
@@ -223,9 +226,9 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        eventQueryDslUtility.addPaginationFilter(query, paginationRequest);
+        List<Event> events = eventQueryDslUtility
+                .getQueryResultWithLocationAndPaginationFilters(query, locationRequest, paginationRequest);
 
-        List<Event> events = eventQueryDslUtility.getQueryResultWithFetchJoins(query);
         List<EventRequest> confirmedRequests = requestRepository
                 .findByEventInAndStatus(events, EventRequestStatus.CONFIRMED);
         List<StatDto> stats = getEventsStats(events);
@@ -422,11 +425,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private void updateLocation(Event updating, EventUpdateDto updater) {
-        Location newLocation = locationMapper.toEntity(updater.getLocation());
-        if (newLocation != null) {
-            Location prevLocation = updating.getLocation();
+        LocationDto locationDto = updater.getLocation();
+        if (locationDto != null) {
+            Location newLocation = locationMapper.toEntity(updater.getLocation());
             updating.setLocation(locationService.putLocation(newLocation));
-            locationService.deleteEventLocation(prevLocation, updating);
         }
     }
 

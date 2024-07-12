@@ -3,8 +3,11 @@ package ru.practicum.explorewithme.mainsvc.event.util;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.practicum.explorewithme.mainsvc.category.entity.QCategory;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
+import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
 import ru.practicum.explorewithme.mainsvc.common.requests.TimeRangeRequest;
 import ru.practicum.explorewithme.mainsvc.common.utils.querydsl.QueryDslUtility;
 import ru.practicum.explorewithme.mainsvc.event.entity.Event;
@@ -13,15 +16,25 @@ import ru.practicum.explorewithme.mainsvc.event.entity.QEvent;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.EventRequestStatus;
 import ru.practicum.explorewithme.mainsvc.event_request.entity.QEventRequest;
 import ru.practicum.explorewithme.mainsvc.location.entity.QLocation;
+import ru.practicum.explorewithme.mainsvc.location.util.GeoUtils;
 import ru.practicum.explorewithme.mainsvc.user.entity.QUser;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
-    public EventQueryDslUtility() {
+    private static final double DEFAULT_LOCATION_RADIUS = 3; // default value for location radius if it's not provided
+    private static final int DEFAULT_PAGINATION_FROM = 0; // default value for pagination from if it's not provided
+    private static final int DEFAULT_PAGINATION_SIZE = 10; // default value for pagination size if it's not provided
+
+    private final GeoUtils geoUtils;
+
+    @Autowired
+    public EventQueryDslUtility(GeoUtils geoUtils) {
         super(QEvent.event);
+        this.geoUtils = geoUtils;
     }
 
     @Override
@@ -41,6 +54,15 @@ public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
                 .leftJoin(qEntity.initiator, user).fetchJoin()
                 .leftJoin(qEntity.location, location).fetchJoin()
                 .fetch();
+    }
+
+    public List<Event> getQueryResultWithLocationAndPaginationFilters(JPAQuery<Event> query,
+                                                                      LocationRadiusRequest locationRadiusRequest,
+                                                                      PaginationRequest paginationRequest) {
+        List<Event> events = getQueryResultWithFetchJoins(query);
+        events = filterLocationWithRadius(events, locationRadiusRequest);
+        events = applyPagination(events, paginationRequest);
+        return events;
     }
 
     public void addTextSearchFilter(JPAQuery<Event> query, String text) {
@@ -110,5 +132,34 @@ public class EventQueryDslUtility extends QueryDslUtility<Event, QEvent> {
 
     public void addOrderByEventDate(JPAQuery<Event> query) {
         query.orderBy(qEntity.eventDate.desc());
+    }
+
+    private List<Event> filterLocationWithRadius(List<Event> events,
+                                                 LocationRadiusRequest locationRadiusRequest) {
+        Double lat = locationRadiusRequest.getLat();
+        Double lon = locationRadiusRequest.getLon();
+
+        if (lat != null && lon != null) {
+            final double radius = locationRadiusRequest.getRadius() != null
+                    ? locationRadiusRequest.getRadius()
+                    : DEFAULT_LOCATION_RADIUS;
+
+            events = events.stream()
+                    .filter(event ->
+                            geoUtils.calculateDistance(
+                                    event.getLocation().getLat(), event.getLocation().getLon(), lat, lon
+                            ) <= radius
+                    ).collect(Collectors.toList());
+        }
+        return events;
+    }
+
+    private List<Event> applyPagination(List<Event> events, PaginationRequest paginationRequest) {
+        Integer from = paginationRequest.getFrom();
+        Integer size = paginationRequest.getSize();
+        return events.stream()
+                .skip(from == null ? DEFAULT_PAGINATION_FROM : from)
+                .limit(size == null ? DEFAULT_PAGINATION_SIZE : size)
+                .collect(Collectors.toList());
     }
 }

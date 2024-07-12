@@ -1,12 +1,31 @@
 package ru.practicum.explorewithme.mainsvc.location.service;
 
-import ru.practicum.explorewithme.mainsvc.event.entity.Event;
+import ru.practicum.explorewithme.mainsvc.common.requests.LocationRadiusRequest;
+import ru.practicum.explorewithme.mainsvc.common.requests.PaginationRequest;
+import ru.practicum.explorewithme.mainsvc.location.dto.LocationDto;
+import ru.practicum.explorewithme.mainsvc.location.dto.LocationUpdateDto;
+import ru.practicum.explorewithme.mainsvc.location.dto.LocationsAdminRequest;
+import ru.practicum.explorewithme.mainsvc.location.dto.LocationsPublicRequest;
 import ru.practicum.explorewithme.mainsvc.location.entity.Location;
 
+import java.util.List;
+
 public interface LocationService {
-    boolean isLocationExists(Location location);
+    LocationDto addLocation(LocationDto locationDto);
+
+    LocationDto updateLocation(long id, LocationUpdateDto locationDto);
+
+    void deleteLocations(List<Long> ids);
+
+    LocationDto getLocation(long id);
+
+    List<LocationDto> getLocationsByAdmin(LocationsAdminRequest locationsRequest, PaginationRequest paginationRequest);
+
+    List<LocationDto> getPublicLocations(LocationsPublicRequest locationsRequest,
+                                         LocationRadiusRequest locationRadiusRequest,
+                                         PaginationRequest paginationRequest);
 
     Location putLocation(Location location);
 
-    boolean deleteEventLocation(Location location, Event event);
+    Location findLocationById(long id);
 }

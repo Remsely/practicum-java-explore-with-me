@@ -42,8 +42,10 @@ public class StatClientService {
     }
 
     public List<StatDto> getEventsStats(List<Long> eventIds, LocalDateTime start, LocalDateTime end) {
-        List<String> uris = eventIds == null || eventIds.isEmpty()
-                ? null : eventIds.stream()
+        if (eventIds == null || eventIds.isEmpty()) {
+            return List.of();
+        }
+        List<String> uris = eventIds.stream()
                 .map(id -> EVENT_URI + id)
                 .collect(Collectors.toList());
         StatsRequest request = StatsRequest.builder()

@@ -9,17 +9,26 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "locations")
-@IdClass(LocationPrimaryKey.class)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Location {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false)
     private Double lat;
 
-    @Id
     @Column(nullable = false)
     private Double lon;
+
+    private Double radius;
+
+    @Column(length = 120)
+    private String name;
+
+    @Column(nullable = false)
+    private Boolean verified;
 }
