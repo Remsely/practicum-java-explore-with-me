@@ -27,6 +27,11 @@ spring:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
 
+springdoc:
+  swagger-ui:
+    url: /docs/ewm-main-service-spec.json
+    path: /swagger-ui
+
 ---
 spring:
   config:
